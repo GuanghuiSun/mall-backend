@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mall.mapper.OrdersMapper">
+
+    <resultMap id="BaseResultMap" type="com.mall.model.domain.Orders">
+        <id property="id" column="id" jdbcType="INTEGER"/>
+        <result property="orderId" column="order_id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="productId" column="product_id" jdbcType="INTEGER"/>
+        <result property="productNum" column="product_num" jdbcType="INTEGER"/>
+        <result property="productPrice" column="product_price" jdbcType="DOUBLE"/>
+        <result property="orderTime" column="order_time" jdbcType="TIMESTAMP"/>
+        <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+        <association property="product" javaType="com.mall.model.domain.Product">
+            <id property="productId" column="product_id" jdbcType="INTEGER"/>
+            <result property="productName" column="product_name" jdbcType="CHAR"/>
+            <result property="categoryId" column="category_id" jdbcType="INTEGER"/>
+            <result property="productTitle" column="product_title" jdbcType="CHAR"/>
+            <result property="productIntro" column="product_intro" jdbcType="VARCHAR"/>
+            <result property="productPicture" column="product_picture" jdbcType="CHAR"/>
+            <result property="productPrice" column="product_price" jdbcType="DOUBLE"/>
+            <result property="productSellingPrice" column="product_selling_price" jdbcType="DOUBLE"/>
+            <result property="productNum" column="product_num" jdbcType="INTEGER"/>
+            <result property="productSales" column="product_sales" jdbcType="INTEGER"/>
+        </association>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id
+        ,order_id,user_id,
+        product_id,product_num,product_price,
+        order_time,is_deleted
+    </sql>
+    <select id="getOrders" resultMap="BaseResultMap">
+        select t.*,
+               product_name,
+               category_id,
+               product_title,
+               product_intro,
+               product_picture,
+               product_selling_price,
+               product_sales
+        from (select * from orders where is_deleted = 0 and user_id = #{userId}) t,
+             product p
+        where p.is_deleted = 0
+          and t.product_id = p.product_id
+    </select>
+</mapper>

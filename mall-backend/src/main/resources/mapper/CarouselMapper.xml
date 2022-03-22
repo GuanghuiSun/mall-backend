@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mall.mapper.CarouselMapper">
+
+    <resultMap id="BaseResultMap" type="com.mall.model.domain.Carousel">
+            <id property="carouselId" column="carousel_id" jdbcType="INTEGER"/>
+            <result property="imgpath" column="imgPath" jdbcType="CHAR"/>
+            <result property="describes" column="describes" jdbcType="CHAR"/>
+            <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        carousel_id,imgPath,describes,
+        is_deleted
+    </sql>
+</mapper>
