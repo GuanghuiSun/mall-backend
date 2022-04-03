@@ -9,6 +9,7 @@ public class MessageConstant {
     public static final String REPEAT_USERNAME_SUCCESS = "用户名不存在！";
     public static final String EMPTY_REGISTER_FAIL = "用户名或密码不能为空！";
     public static final String LENGTH_REGISTER_FAIL = "用户名或密码长度不符合要求！";
+    public static final String PATTERN_REGISTER_FAIL = "用户名或密码长度不符合要求！";
     public static final String CHECK_REGISTER_FAIL = "两次输入的密码不同！";
     public static final String ERROR_REGISTER_FAIL = "保存数据失败！";
     public static final String CHECK_PASSWORD_FAIL = "密码输入错误！";
@@ -29,5 +30,4 @@ public class MessageConstant {
     public static final String ORDER_SUCCESS = "下单成功！";
     public static final String ORDER_FAIL = "下单失败！";
     public static final String ORDER_EMPTY = "订单为空！";
-    public static final String CART_EMPTY = "购物车为空！";
 }

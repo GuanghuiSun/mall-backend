@@ -74,7 +74,7 @@ public class ProductController {
      */
     @GetMapping("/getCategory")
     public BaseResponse<List<Category>> getCategory(){
-        List<Category> categoryList = categoryService.list();
+        List<Category> categoryList = categoryService.getCategoryList();
         if(categoryList == null){
             return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
         }

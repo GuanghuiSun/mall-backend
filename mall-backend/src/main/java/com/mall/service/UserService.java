@@ -1,7 +1,9 @@
 package com.mall.service;
 
+import com.mall.base.BaseResponse;
 import com.mall.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mall.model.domain.UserDTO;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -18,7 +20,7 @@ public interface UserService extends IService<User> {
      * @param checkPassword 校验密码
      * @return
      */
-    long userRegister(String username, String password, String checkPassword);
+    BaseResponse<Long> userRegister(String username, String password, String checkPassword);
 
     /**
      * 用户登录
@@ -26,7 +28,7 @@ public interface UserService extends IService<User> {
      * @param password 密码
      * @return
      */
-    User userLogin(String username, String password, HttpServletRequest request);
+    BaseResponse<String> userLogin(String username, String password, HttpServletRequest request);
 
     /**
      * 查询用户是否存在

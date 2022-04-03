@@ -37,27 +37,27 @@ class UserServiceTest {
 
     @Test
     void userRegister() {
-        String username = "testasdaa";
-        String password = "";
-        String checkPassword = "1234567";
-        long l = userService.userRegister(username, password, checkPassword);
-        Assertions.assertEquals(-1,l);
-        username = "te";
-        password = "1234567";
-        long l2 = userService.userRegister(username,password,checkPassword);
-        Assertions.assertEquals(-1,l2);
-        username = "*&((&%$%^%^&";
-        long l3 = userService.userRegister(username,password,checkPassword);
-        Assertions.assertEquals(-1,l3);
-        username = "test";
-        long l4 = userService.userRegister(username,password,checkPassword);
-        Assertions.assertEquals(-1,l4);
-        username = "woshiceshi";
-        password = "123";
-        long l5 = userService.userRegister(username,password,checkPassword);
-        Assertions.assertEquals(-1,l5);
-        password = "1234567";
-        long result = userService.userRegister(username,password,checkPassword);
-        assertTrue(result > 0 );
+//        String username = "testasdaa";
+//        String password = "";
+//        String checkPassword = "1234567";
+//        long l = userService.userRegister(username, password, checkPassword);
+//        Assertions.assertEquals(-1,l);
+//        username = "te";
+//        password = "1234567";
+//        long l2 = userService.userRegister(username,password,checkPassword);
+//        Assertions.assertEquals(-1,l2);
+//        username = "*&((&%$%^%^&";
+//        long l3 = userService.userRegister(username,password,checkPassword);
+//        Assertions.assertEquals(-1,l3);
+//        username = "test";
+//        long l4 = userService.userRegister(username,password,checkPassword);
+//        Assertions.assertEquals(-1,l4);
+//        username = "woshiceshi";
+//        password = "123";
+//        long l5 = userService.userRegister(username,password,checkPassword);
+//        Assertions.assertEquals(-1,l5);
+//        password = "1234567";
+//        long result = userService.userRegister(username,password,checkPassword);
+//        assertTrue(result > 0 );
     }
 }

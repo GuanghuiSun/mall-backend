@@ -36,9 +36,6 @@ public class ShoppingCartController {
         if(shoppingCart==null){
             return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
         }
-        if(shoppingCart.isEmpty()){
-            return ResultUtils.success("002",shoppingCart,MessageConstant.CART_EMPTY);
-        }
         return ResultUtils.success(shoppingCart,MessageConstant.SELECT_SUCCESS);
     }
 
