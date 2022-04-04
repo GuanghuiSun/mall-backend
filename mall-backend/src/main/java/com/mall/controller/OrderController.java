@@ -8,13 +8,12 @@ import com.mall.model.domain.ShoppingCart;
 import com.mall.model.request.OrderRequest;
 import com.mall.service.OrdersService;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+
+import static com.mall.constant.MessageConstant.SELECT_SUCCESS;
 
 @RestController
 @RequestMapping("/order")
@@ -39,14 +38,7 @@ public class OrderController {
             return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
         }
         List<List<Orders>> orders = ordersService.getOrders(userId);
-        if (orders == null) {
-            return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
-        }
-        if(orders.isEmpty()){
-            return ResultUtils.success("002",orders, MessageConstant.ORDER_EMPTY);
-        }
-        return ResultUtils.success(orders, MessageConstant.SELECT_SUCCESS);
-
+        return ResultUtils.success(orders, SELECT_SUCCESS);
     }
 
     /**
@@ -61,10 +53,6 @@ public class OrderController {
         }
         String userId = orderRequest.getUserId();
         ShoppingCart[] shoppingCart = orderRequest.getShoppingCart();
-        System.out.println(userId);
-        for(ShoppingCart shoppingCart1 : shoppingCart){
-            System.out.println(shoppingCart1);
-        }
         if (StringUtils.isAnyBlank(userId) || shoppingCart == null || shoppingCart.length == 0) {
             return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
         }
@@ -74,8 +62,16 @@ public class OrderController {
         } else {
             return ResultUtils.error(false,MessageConstant.ORDER_FAIL);
         }
-
     }
 
+    /**
+     * 获取所有订单
+     * @return
+     */
+    @GetMapping()
+    public BaseResponse<List<List<Orders>>> getAllOrders(){
+        List<List<Orders>> result = ordersService.getAllOrders();
+        return ResultUtils.success(result,SELECT_SUCCESS);
+    }
 
 }

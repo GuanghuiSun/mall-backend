@@ -43,4 +43,12 @@ public interface ShoppingCartService extends IService<ShoppingCart> {
      * @return
      */
     Map<ShoppingCart, Integer> addShoppingCart(String userId, String productId);
+
+    /**
+     * 更改购物车中商品的支付状态
+     * @param userId 用户id
+     * @param productId 商品id
+     * @return
+     */
+    Boolean updateProductStatus(String userId, String productId);
 }

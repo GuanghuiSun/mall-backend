@@ -16,13 +16,15 @@
         <result property="productNum" column="product_num" jdbcType="INTEGER"/>
         <result property="productSales" column="product_sales" jdbcType="INTEGER"/>
         <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="isAllowance" column="is_allowance" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         product_id,product_name,category_id,
         product_title,product_intro,product_picture,
         product_price,product_selling_price,product_num,
-        product_sales,is_deleted
+        product_sales,is_deleted,create_time,is_allowance
     </sql>
 
 </mapper>

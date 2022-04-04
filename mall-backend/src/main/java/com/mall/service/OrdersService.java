@@ -13,8 +13,8 @@ import java.util.List;
 public interface OrdersService extends IService<Orders> {
 
     /**
-     * 获取订单信息
-     * @param userId
+     * 获取指定用户订单信息
+     * @param userId 用户id
      * @return
      */
     List<List<Orders>> getOrders(String userId);
@@ -26,4 +26,12 @@ public interface OrdersService extends IService<Orders> {
      * @return
      */
     Boolean addOrders(String userId, ShoppingCart[] shoppingCart);
+
+    /**
+     * 获取所有订单
+     * @return
+     */
+    List<List<Orders>> getAllOrders();
+
+
 }

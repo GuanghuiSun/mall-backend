@@ -1,12 +1,15 @@
 package com.mall.service.impl;
 
+import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mall.mapper.ShoppingCartMapper;
 import com.mall.model.domain.Product;
 import com.mall.model.domain.ShoppingCart;
 import com.mall.service.ProductService;
 import com.mall.service.ShoppingCartService;
+import java.util.Collections;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -55,7 +58,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         Map<ShoppingCart, Integer> map = new HashMap<>();
         //查询购物车中是否有该商品
         LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ShoppingCart::getUserId, userId).eq(ShoppingCart::getProductId, productId);
+        wrapper.eq(ShoppingCart::getUserId, userId).eq(ShoppingCart::getProductId, productId).eq(ShoppingCart::getIsPaid,0);
         ShoppingCart shoppingCart = shoppingCartMapper.selectOne(wrapper);
         //如果有则数量加一，没有则新加一个
         if (shoppingCart == null) {
@@ -72,7 +75,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
                 return map;
             } else {
                 //添加失败
-                return null;
+                return Collections.emptyMap();
             }
         } else {
             //如果商品已到限购数量
@@ -89,6 +92,15 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
             return map;
         }
 
+    }
+
+    @Override
+    public Boolean updateProductStatus(String userId, String productId) {
+        LambdaUpdateWrapper<ShoppingCart> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(ShoppingCart::getUserId,userId).eq(ShoppingCart::getProductId,productId)
+                .set(ShoppingCart::getIsPaid,1);
+        boolean success = update(wrapper);
+        return BooleanUtil.isTrue(success);
     }
 }
 

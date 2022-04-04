@@ -8,6 +8,7 @@ import com.mall.model.domain.Category;
 import com.mall.model.domain.Product;
 import com.mall.model.domain.ProductPicture;
 import com.mall.model.request.ProductPageRequest;
+import com.mall.model.request.ProductPictureRequest;
 import com.mall.service.CategoryService;
 import com.mall.service.ProductPictureService;
 import com.mall.service.ProductService;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+
+import static com.mall.constant.MessageConstant.REQUEST_FAIL;
 
 /**
  * product表现层
@@ -172,6 +175,78 @@ public class ProductController {
             return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
         }
         return ResultUtils.success(detailsPicture,MessageConstant.SELECT_SUCCESS);
+    }
+
+    /**
+     * 添加商品
+     * @param product 商品
+     * @return
+     */
+    @PostMapping("/addProduct")
+    public BaseResponse<Integer> addProduct(@RequestBody Product product) {
+        //判断商品是否为空
+        if(product==null){
+            return ResultUtils.fail(REQUEST_FAIL);
+        }
+        return productService.addProduct(product);
+    }
+
+    /**
+     * 添加图片
+     * @param productPictureRequest 请求体
+     * @return
+     */
+    @PostMapping("/addPictures")
+    public BaseResponse<Boolean> addProductPictures(@RequestBody ProductPictureRequest productPictureRequest) {
+        if(productPictureRequest == null) {
+            return ResultUtils.error(false,REQUEST_FAIL);
+        }
+        Integer productId = productPictureRequest.getProductId();
+        String[] pictures = productPictureRequest.getPictures();
+        String pictureIntro = productPictureRequest.getPictureIntro();
+        return productService.addProductPictures(pictures, productId, pictureIntro);
+    }
+
+    /**
+     * 删除商品的一些详细图片
+     * @param productPictureRequest 商品图片请求体
+     * @return
+     */
+    @DeleteMapping("/removePictures")
+    public BaseResponse<Boolean> removeProductPictures(@RequestBody ProductPictureRequest productPictureRequest) {
+        if (productPictureRequest == null) {
+            return ResultUtils.error(false, REQUEST_FAIL);
+        }
+        Integer productId = productPictureRequest.getProductId();
+        String[] pictures = productPictureRequest.getPictures();
+        return productService.removeProductPictures(pictures, productId);
+    }
+
+
+    /**
+     * 删除商品
+     * @param productId 商品id
+     * @return
+     */
+    @DeleteMapping("/{productId}")
+    public BaseResponse<Boolean> deleteProduct(@PathVariable("productId") Integer productId) {
+        if(productId==null) {
+            return ResultUtils.error(false,REQUEST_FAIL);
+        }
+        return productService.deleteProduct(productId);
+    }
+
+    /**
+     * 更新商品
+     * @param product 商品
+     * @return
+     */
+    @PutMapping
+    public BaseResponse<Boolean> updateProduct(@RequestBody Product product) {
+        if(product==null) {
+            return ResultUtils.error(false,REQUEST_FAIL);
+        }
+        return productService.updateProduct(product);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.mall.service;
 
+import com.mall.base.BaseResponse;
 import com.mall.model.domain.Carousel;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -15,4 +16,18 @@ public interface CarouselService extends IService<Carousel> {
      * @return
      */
     List<Carousel> getCarousel();
+
+    /**
+     * 添加轮播图
+     * @param carousel 轮播图
+     * @return
+     */
+    BaseResponse<Integer> addCarousel(Carousel carousel);
+
+    /**
+     * 删除轮播图
+     * @param carouselId 轮播图id
+     * @return
+     */
+    BaseResponse<Boolean> deleteById(Integer carouselId);
 }

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mall.model.domain.UserDTO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author huawei
@@ -36,4 +37,24 @@ public interface UserService extends IService<User> {
      * @return
      */
     long checkUsername(String username);
+
+    /**
+     * 获取所有用户
+     * @return
+     */
+    BaseResponse<List<UserDTO>> getAllUsers();
+
+    /**
+     * 禁用某个用户
+     * @param userId 用户id
+     * @return
+     */
+    BaseResponse<Boolean> disableUser(Integer userId);
+
+    /**
+     * 永久删除该账户及有关信息
+     * @param userId 用户id
+     * @return
+     */
+    BaseResponse<Boolean> deleteUser(Integer userId);
 }

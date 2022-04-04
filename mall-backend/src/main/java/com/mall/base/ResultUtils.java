@@ -22,4 +22,8 @@ public class ResultUtils {
     public static <T> BaseResponse<T> error(String code, T data,String message){
         return new BaseResponse<>(code,data,message);
     }
+
+    public static <T> BaseResponse<T> fail(String message){
+        return new BaseResponse<>("-1",null,message);
+    }
 }

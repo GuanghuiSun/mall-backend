@@ -30,4 +30,12 @@ public class MessageConstant {
     public static final String ORDER_SUCCESS = "下单成功！";
     public static final String ORDER_FAIL = "下单失败！";
     public static final String ORDER_EMPTY = "订单为空！";
+    public static final String PRODUCT_INFORMATION_ERROR = "商品信息不全！";
+    public static final String PRODUCT_NOT_EXIST = "商品不存在！";
+    public static final String USER_NOT_EXIST = "用户不存在！";
+    public static final String CAROUSEL_NOT_EXIST = "轮播图不存在！";
+    public static final String USER_NOT_VALID = "用户已被禁用，请联系管理员！";
+
+
+
 }

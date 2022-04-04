@@ -1,10 +1,10 @@
 package com.mall.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.mall.base.BaseResponse;
 import com.mall.model.domain.Product;
 import com.baomidou.mybatisplus.extension.service.IService;
 
-import javax.sound.sampled.Port;
 import java.util.List;
 
 /**
@@ -59,5 +59,46 @@ public interface ProductService extends IService<Product> {
      */
     IPage<Product> getProductBySearch(String queryString, int currentPage, int pageSize);
 
+    /**
+     * 添加商品
+     * @param product 商品
+     * @return
+     */
+    BaseResponse<Integer> addProduct(Product product);
 
+    /**
+     * 添加图片
+     * @param pictures 商品图片
+     * @return
+     */
+    BaseResponse<Boolean> addProductPictures(String[] pictures,Integer productId,String pictureIntro);
+
+    /**
+     * 删除商品
+     * @param productId 商品id
+     * @return
+     */
+    BaseResponse<Boolean> deleteProduct(Integer productId);
+
+    /**
+     * 删除商品图片
+     * @param pictures 图片
+     * @param productId 商品id
+     * @return
+     */
+    BaseResponse<Boolean> removeProductPictures(String[] pictures, Integer productId);
+
+    /**
+     * 更新商品
+     * @param product 商品
+     * @return
+     */
+    BaseResponse<Boolean> updateProduct(Product product);
+
+    /**
+     * 根据分类号获取商品
+     * @param categoryList 分类号列表
+     * @return
+     */
+    List<Product> getProductByCategoryIds(Integer[] categoryList);
 }

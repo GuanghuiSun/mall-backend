@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 import lombok.Data;
@@ -84,10 +85,22 @@ public class Product implements Serializable {
     private Integer productSales;
 
     /**
+     * 产品是否上架
+     */
+    @TableField(value = "is_allowance")
+    private Byte isAllowance;
+
+    /**
      * 产品是否存在
      */
     @TableField(value = "is_deleted")
     private Byte isDeleted;
+
+    /**
+     * 创建时间
+     */
+    @TableField(value = "create_time")
+    private Date createTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

@@ -24,6 +24,7 @@
             <result property="productSellingPrice" column="product_selling_price" jdbcType="DOUBLE"/>
             <result property="productNum" column="product_num" jdbcType="INTEGER"/>
             <result property="productSales" column="product_sales" jdbcType="INTEGER"/>
+            <result property="isAllowance" column="is_allowance" jdbcType="TINYINT"/>
         </association>
     </resultMap>
 
@@ -41,10 +42,12 @@
                product_intro,
                product_picture,
                product_selling_price,
-               product_sales
+               product_sales,
+               is_allowance
         from (select * from orders where is_deleted = 0 and user_id = #{userId}) t,
              product p
         where p.is_deleted = 0
+          and p.is_allowance = 0
           and t.product_id = p.product_id
     </select>
 </mapper>

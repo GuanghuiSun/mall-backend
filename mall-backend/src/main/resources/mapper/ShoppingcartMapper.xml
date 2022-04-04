@@ -10,6 +10,7 @@
         <result property="productId" column="product_id" jdbcType="INTEGER"/>
         <result property="num" column="num" jdbcType="INTEGER"/>
         <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+        <result property="isPaid" column="is_paid" jdbcType="TINYINT"/>
         <association property="product" javaType="com.mall.model.domain.Product">
             <id property="productId" column="product_id" jdbcType="INTEGER"/>
             <result property="productName" column="product_name" jdbcType="CHAR"/>
@@ -21,13 +22,14 @@
             <result property="productSellingPrice" column="product_selling_price" jdbcType="DOUBLE"/>
             <result property="productNum" column="product_num" jdbcType="INTEGER"/>
             <result property="productSales" column="product_sales" jdbcType="INTEGER"/>
+            <result property="isAllowance" column="is_allowance" jdbcType="TINYINT"/>
         </association>
     </resultMap>
 
     <sql id="Base_Column_List">
         id
         ,user_id,product_id,
-        num,is_deleted
+        num,is_deleted,is_paid
     </sql>
     <select id="getShoppingCart" resultMap="BaseResultMap">
         select t.*,
@@ -37,10 +39,14 @@
                product_intro,
                product_picture,
                product_selling_price,
-               product_sales
-        from (select * from shoppingcart where user_id = #{userId} and is_deleted = 0) t,
+               product_sales,
+               product_num,
+               product_price,
+               is_allowance
+        from (select * from shoppingcart where user_id = #{userId} and is_deleted = 0 and p.is_paid = 0) t,
              product p
         where t.product_id = p.product_id
           and p.is_deleted = 0
+          and p.is_allowance = 0
     </select>
 </mapper>

@@ -24,11 +24,11 @@ class UserServiceTest {
     @Test
     void testAddUser(){
         User user = new User();
-        user.setUsername("test");
+        user.setUsername("test12");
         user.setAvatarUrl("https://account.bilibili.com/account/face/upload?spm_id_from=333.999.0.0");
-        user.setUserPassword("123456");
-        user.setPhone("19910762339");
-        user.setEmail("1849920218@qq.com");
+        user.setUserPassword("aa123456");
+        user.setPhone("199107622342");
+        user.setEmail("1849920@qq.com");
         boolean save = userService.save(user);
         System.out.println(user.getUserId());
         assertTrue(save);

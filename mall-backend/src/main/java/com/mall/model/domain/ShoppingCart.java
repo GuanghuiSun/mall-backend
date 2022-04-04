@@ -47,6 +47,12 @@ public class ShoppingCart implements Serializable {
     private Integer num;
 
     /**
+     * 是否已支付
+     */
+    @TableField(value = "is_paid")
+    private Byte isPaid;
+
+    /**
      * 逻辑删除
      */
     @TableField(value = "is_deleted")
