@@ -3,7 +3,7 @@ package com.mall.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.mall.base.BaseResponse;
 import com.mall.base.ResultUtils;
-import com.mall.constant.MessageConstant;
+import com.mall.exception.BusinessException;
 import com.mall.model.domain.Category;
 import com.mall.model.domain.Product;
 import com.mall.model.domain.ProductPicture;
@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.List;
 
-import static com.mall.constant.MessageConstant.REQUEST_FAIL;
+import static com.mall.base.ErrorCode.*;
+import static com.mall.constant.MessageConstant.*;
 
 /**
  * product表现层
@@ -44,13 +45,13 @@ public class ProductController {
     @GetMapping("/getPromoProduct")
     public BaseResponse<List<Product>> getPromoProduct(String categoryName) {
         if (categoryName == null) {
-            return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         List<Product> productByCategory = productService.getProductByCategoryName(categoryName);
         if (productByCategory == null) {
-            return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
+            throw new BusinessException(GET_MESSAGE_ERROR,SELECT_FAIL);
         }
-        return ResultUtils.success(productByCategory, MessageConstant.SELECT_SUCCESS);
+        return ResultUtils.success(productByCategory, SELECT_SUCCESS);
     }
 
     /**
@@ -62,13 +63,10 @@ public class ProductController {
     @GetMapping("/getHotProduct")
     public BaseResponse<List<Product>> getHotProduct(String[] categoryName) {
         if (categoryName == null) {
-            return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         List<Product> hotProduct = productService.getHotProduct(categoryName);
-        if (hotProduct == null) {
-            return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
-        }
-        return ResultUtils.success(hotProduct, MessageConstant.SELECT_SUCCESS);
+        return ResultUtils.success(hotProduct, SELECT_SUCCESS);
     }
 
     /**
@@ -78,10 +76,7 @@ public class ProductController {
     @GetMapping("/getCategory")
     public BaseResponse<List<Category>> getCategory(){
         List<Category> categoryList = categoryService.getCategoryList();
-        if(categoryList == null){
-            return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
-        }
-        return ResultUtils.success(categoryList, MessageConstant.SELECT_SUCCESS);
+        return ResultUtils.success(categoryList, SELECT_SUCCESS);
     }
 
     /**
@@ -92,15 +87,15 @@ public class ProductController {
     @PostMapping("/getAllProduct")
     public BaseResponse<IPage<Product>> getAllProduct(@RequestBody ProductPageRequest productPageRequest){
         if(productPageRequest == null){
-            return ResultUtils.error(null,MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         int pageSize = productPageRequest.getPageSize();
         int currentPage = productPageRequest.getCurrentPage();
         IPage<Product> products = productService.getALlProduct(currentPage, pageSize);
         if(products == null){
-            return ResultUtils.error(null,MessageConstant.SELECT_FAIL);
+            throw new BusinessException(GET_MESSAGE_ERROR,SELECT_FAIL);
         }
-        return ResultUtils.success(products,MessageConstant.SELECT_SUCCESS);
+        return ResultUtils.success(products,SELECT_SUCCESS);
     }
 
     /**
@@ -111,16 +106,16 @@ public class ProductController {
     @PostMapping("/getProductByCategory")
     public BaseResponse<IPage<Product>> getProductByCategory(@RequestBody ProductPageRequest productPageRequest){
         if(productPageRequest == null){
-            return ResultUtils.error(null,MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         String[] category = productPageRequest.getCategory();
         int currentPage = productPageRequest.getCurrentPage();
         int pageSize = productPageRequest.getPageSize();
         IPage<Product> products = productService.getProductByCategory(Integer.parseInt(category[0]), currentPage, pageSize);
         if(products == null){
-            return ResultUtils.error(null,MessageConstant.SELECT_FAIL);
+            throw new BusinessException(GET_MESSAGE_ERROR,SELECT_FAIL);
         }
-        return ResultUtils.success(products,MessageConstant.SELECT_SUCCESS);
+        return ResultUtils.success(products,SELECT_SUCCESS);
     }
 
     /**
@@ -131,16 +126,16 @@ public class ProductController {
     @PostMapping("/getProductBySearch")
     public BaseResponse<IPage<Product>> getProductBySearch(@RequestBody ProductPageRequest productPageRequest){
         if(productPageRequest == null){
-            return ResultUtils.error(null,MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         String queryString = productPageRequest.getSearch();
         int currentPage = productPageRequest.getCurrentPage();
         int pageSize = productPageRequest.getPageSize();
         IPage<Product> products = productService.getProductBySearch(queryString, currentPage, pageSize);
         if(products == null) {
-            return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
+            throw new BusinessException(GET_MESSAGE_ERROR,SELECT_FAIL);
         }
-        return ResultUtils.success(products,MessageConstant.SELECT_SUCCESS);
+        return ResultUtils.success(products,SELECT_SUCCESS);
     }
 
     /**
@@ -151,13 +146,13 @@ public class ProductController {
     @GetMapping("/getDetails")
     public BaseResponse<Product> getDetailsById(String productId){
         if(productId == null){
-            return ResultUtils.error(null,MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         Product product = productService.getById(productId);
         if(product == null){
-            return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
+            throw new BusinessException(GET_MESSAGE_ERROR,SELECT_FAIL);
         }
-        return ResultUtils.success(product,MessageConstant.SELECT_SUCCESS);
+        return ResultUtils.success(product,SELECT_SUCCESS);
     }
 
     /**
@@ -168,13 +163,13 @@ public class ProductController {
     @GetMapping("/getDetailsPicture")
     public BaseResponse<List<ProductPicture>> getDetailsPicture(String productId){
         if(productId == null){
-            return ResultUtils.error(null,MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         List<ProductPicture> detailsPicture = productPictureService.getDetailsPicture(productId);
         if(detailsPicture == null){
-            return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
+            throw new BusinessException(GET_MESSAGE_ERROR,SELECT_FAIL);
         }
-        return ResultUtils.success(detailsPicture,MessageConstant.SELECT_SUCCESS);
+        return ResultUtils.success(detailsPicture,SELECT_SUCCESS);
     }
 
     /**
@@ -186,9 +181,11 @@ public class ProductController {
     public BaseResponse<Integer> addProduct(@RequestBody Product product) {
         //判断商品是否为空
         if(product==null){
-            return ResultUtils.fail(REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
-        return productService.addProduct(product);
+        Integer productId = productService.addProduct(product);
+        return ResultUtils.success(productId, ADD_SUCCESS);
+
     }
 
     /**
@@ -199,12 +196,13 @@ public class ProductController {
     @PostMapping("/addPictures")
     public BaseResponse<Boolean> addProductPictures(@RequestBody ProductPictureRequest productPictureRequest) {
         if(productPictureRequest == null) {
-            return ResultUtils.error(false,REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         Integer productId = productPictureRequest.getProductId();
         String[] pictures = productPictureRequest.getPictures();
         String pictureIntro = productPictureRequest.getPictureIntro();
-        return productService.addProductPictures(pictures, productId, pictureIntro);
+        Boolean success = productService.addProductPictures(pictures, productId, pictureIntro);
+        return ResultUtils.success(success,ADD_SUCCESS);
     }
 
     /**
@@ -215,11 +213,12 @@ public class ProductController {
     @DeleteMapping("/removePictures")
     public BaseResponse<Boolean> removeProductPictures(@RequestBody ProductPictureRequest productPictureRequest) {
         if (productPictureRequest == null) {
-            return ResultUtils.error(false, REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         Integer productId = productPictureRequest.getProductId();
         String[] pictures = productPictureRequest.getPictures();
-        return productService.removeProductPictures(pictures, productId);
+        Boolean success = productService.removeProductPictures(pictures, productId);
+        return ResultUtils.success(success, DELETE_SUCCESS);
     }
 
 
@@ -231,9 +230,10 @@ public class ProductController {
     @DeleteMapping("/{productId}")
     public BaseResponse<Boolean> deleteProduct(@PathVariable("productId") Integer productId) {
         if(productId==null) {
-            return ResultUtils.error(false,REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
-        return productService.deleteProduct(productId);
+        Boolean success = productService.deleteProduct(productId);
+        return ResultUtils.success(success, DELETE_SUCCESS);
     }
 
     /**
@@ -244,9 +244,10 @@ public class ProductController {
     @PutMapping
     public BaseResponse<Boolean> updateProduct(@RequestBody Product product) {
         if(product==null) {
-            return ResultUtils.error(false,REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
-        return productService.updateProduct(product);
+        Boolean success = productService.updateProduct(product);
+        return ResultUtils.success(success, UPDATE_SUCCESS);
     }
 
 }

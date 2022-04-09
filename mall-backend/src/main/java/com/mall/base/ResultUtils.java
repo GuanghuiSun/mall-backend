@@ -3,27 +3,28 @@ package com.mall.base;
 public class ResultUtils {
     /**
      * 响应成功
-     * @param data
-     * @param <T>
+     *
+     * @param data 响应数据
+     * @param <T> 数据类型
      * @return
      */
-    public static <T> BaseResponse<T> success(T data,String message){
-        return new BaseResponse<>("001",data,message);
+    public static <T> BaseResponse<T> success(T data, String message) {
+        return new BaseResponse<>(200, data, message);
     }
 
-    public static <T> BaseResponse<T> error(T data,String message){
-        return new BaseResponse<>("-1",data,message);
+    public static <T> BaseResponse<T> success(int code, T data, String message) {
+        return new BaseResponse<>(code, data, message);
     }
 
-    public static <T> BaseResponse<T> success(String code, T data,String message){
-        return new BaseResponse<>(code,data,message);
+    public static <T> BaseResponse<T> error(int code, T data, String message) {
+        return new BaseResponse<>(code, data, message,message);
     }
 
-    public static <T> BaseResponse<T> error(String code, T data,String message){
-        return new BaseResponse<>(code,data,message);
+    public static <T> BaseResponse<T> error(ErrorCode errorCode) {
+        return new BaseResponse<>(errorCode);
     }
 
-    public static <T> BaseResponse<T> fail(String message){
-        return new BaseResponse<>("-1",null,message);
+    public static <T> BaseResponse<T> error(int code, String message, String description) {
+        return new BaseResponse<>(code, null, message, description);
     }
 }

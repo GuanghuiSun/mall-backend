@@ -2,8 +2,7 @@ package com.mall.controller;
 
 import com.mall.base.BaseResponse;
 import com.mall.base.ResultUtils;
-import com.mall.constant.MessageConstant;
-import com.mall.model.domain.User;
+import com.mall.exception.BusinessException;
 import com.mall.model.domain.UserDTO;
 import com.mall.model.request.UserLoginRequest;
 import com.mall.model.request.UserRegisterRequest;
@@ -17,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
+import static com.mall.base.ErrorCode.*;
 import static com.mall.constant.MessageConstant.*;
 
 @RestController
@@ -33,14 +33,14 @@ public class UserController {
      * @return
      */
     @PostMapping("/register")
-    public BaseResponse<Long> register(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public BaseResponse<Integer> register(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) {
-            return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         String username = userRegisterRequest.getUsername();
         String password = userRegisterRequest.getPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        return userService.userRegister(username, password, checkPassword);
+        return ResultUtils.success(userService.userRegister(username, password, checkPassword), REGISTER_SUCCESS);
     }
 
     /**
@@ -52,14 +52,9 @@ public class UserController {
     @GetMapping("/findUsername")
     public BaseResponse<Boolean> checkUsername(String username) {
         if (StringUtils.isAnyBlank(username)) {
-            return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
-        long l = userService.checkUsername(username);
-        if (l < 0) {
-            return ResultUtils.error(true, MessageConstant.REPEAT_USERNAME_FAIL);
-
-        }
-        return ResultUtils.success(false, MessageConstant.REPEAT_USERNAME_SUCCESS);
+        return ResultUtils.success(false, REPEAT_USERNAME_SUCCESS);
     }
 
     /**
@@ -71,11 +66,12 @@ public class UserController {
     @PostMapping("/login")
     public BaseResponse<String> login(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
-            return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         String username = userLoginRequest.getUsername();
         String password = userLoginRequest.getPassword();
-        return userService.userLogin(username, password, request);
+        String token = userService.userLogin(username, password, request);
+        return ResultUtils.success(token,LOGIN_SUCCESS);
     }
 
     /**
@@ -88,7 +84,7 @@ public class UserController {
         UserDTO user = UserHolder.getUser();
         System.out.println("UserDTO:"+user);
         if (user == null) {
-            return ResultUtils.error(null, LOGIN_FAIL);
+            throw new BusinessException(NOT_LOGIN_ERROR,LOGIN_FAIL);
         }
         return ResultUtils.success(user, LOGIN_SUCCESS);
     }
@@ -100,7 +96,8 @@ public class UserController {
      */
     @GetMapping("/all")
     public BaseResponse<List<UserDTO>> getAllUsers() {
-        return userService.getAllUsers();
+        List<UserDTO> users = userService.getAllUsers();
+        return ResultUtils.success(users,SELECT_SUCCESS);
     }
 
     /**
@@ -111,17 +108,25 @@ public class UserController {
     @PutMapping("{userId}")
     public BaseResponse<Boolean> disableUser(@PathVariable("userId") Integer userId) {
         if (userId == null) {
-            return ResultUtils.error(null, REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
-        return userService.disableUser(userId);
+        Boolean success = userService.disableUser(userId);
+        if(Boolean.FALSE.equals(success)){
+            throw new BusinessException(REQUEST_SERVICE_ERROR,CHANGE_VALID_FAIL);
+        }
+        return ResultUtils.success(true,CHANGE_VALID_SUCCESS);
     }
 
     @DeleteMapping("{userId}")
     public BaseResponse<Boolean> deleteUser(@PathVariable("userId") Integer userId) {
         if (userId == null) {
-            return ResultUtils.error(null, REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
-        return userService.deleteUser(userId);
+        Boolean success = userService.deleteUser(userId);
+        if(Boolean.FALSE.equals(success)){
+            throw new BusinessException(REQUEST_SERVICE_ERROR,DELETE_FAIL);
+        }
+        return ResultUtils.success(true,DELETE_SUCCESS);
     }
 
 }

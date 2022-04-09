@@ -9,7 +9,9 @@ import com.mall.model.domain.Product;
 import com.mall.model.domain.ShoppingCart;
 import com.mall.service.ProductService;
 import com.mall.service.ShoppingCartService;
+
 import java.util.Collections;
+
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -31,7 +33,11 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
 
     @Override
     public List<ShoppingCart> getShoppingCart(String userId) {
-        return shoppingCartMapper.getShoppingCart(userId);
+        List<ShoppingCart> shoppingCart = shoppingCartMapper.getShoppingCart(userId);
+        if (shoppingCart == null) {
+            return Collections.emptyList();
+        }
+        return shoppingCart;
     }
 
     @Override
@@ -58,7 +64,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         Map<ShoppingCart, Integer> map = new HashMap<>();
         //查询购物车中是否有该商品
         LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ShoppingCart::getUserId, userId).eq(ShoppingCart::getProductId, productId).eq(ShoppingCart::getIsPaid,0);
+        wrapper.eq(ShoppingCart::getUserId, userId).eq(ShoppingCart::getProductId, productId).eq(ShoppingCart::getIsPaid, 0);
         ShoppingCart shoppingCart = shoppingCartMapper.selectOne(wrapper);
         //如果有则数量加一，没有则新加一个
         if (shoppingCart == null) {
@@ -83,7 +89,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
             Integer maxNum = productService.getMaxPurchasableNum(productId);
             if (hadNum.equals(maxNum)) {
                 //已达上限
-                map.put(shoppingCart,-1);
+                map.put(shoppingCart, -1);
                 return map;
             }
             //更新购物车，重复添加
@@ -97,8 +103,8 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     @Override
     public Boolean updateProductStatus(String userId, String productId) {
         LambdaUpdateWrapper<ShoppingCart> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(ShoppingCart::getUserId,userId).eq(ShoppingCart::getProductId,productId)
-                .set(ShoppingCart::getIsPaid,1);
+        wrapper.eq(ShoppingCart::getUserId, userId).eq(ShoppingCart::getProductId, productId)
+                .set(ShoppingCart::getIsPaid, 1);
         boolean success = update(wrapper);
         return BooleanUtil.isTrue(success);
     }

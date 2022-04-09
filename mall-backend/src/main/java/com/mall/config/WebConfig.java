@@ -23,7 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        /**
+        /*
          * 访问路径：http://localhost:8082/public/imgs/accessory/protectingShell-RedMi-K20&pro.png
          * http://localhost:8082/public/imgs/phone/picture/MI%20CC9%20Pro-2.jpg
          * "/public/**" 为前端URL访问路径

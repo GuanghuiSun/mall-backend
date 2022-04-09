@@ -3,6 +3,7 @@ package com.mall.controller;
 import com.mall.base.BaseResponse;
 import com.mall.base.ResultUtils;
 import com.mall.constant.MessageConstant;
+import com.mall.exception.BusinessException;
 import com.mall.model.domain.Carousel;
 import com.mall.service.CarouselService;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.List;
 
+import static com.mall.base.ErrorCode.*;
 import static com.mall.constant.MessageConstant.*;
 
 @RestController
@@ -27,7 +29,7 @@ public class ResourcesController {
     public BaseResponse<List<Carousel>> getCarousels(){
         List<Carousel> carousel = carouselService.getCarousel();
         if(carousel == null){
-            return ResultUtils.error(null, MessageConstant.SELECT_FAIL);
+            throw new BusinessException(GET_MESSAGE_ERROR,SELECT_FAIL);
         }
         return ResultUtils.success(carousel,MessageConstant.SELECT_SUCCESS);
     }
@@ -40,9 +42,10 @@ public class ResourcesController {
     @PostMapping("/carousel")
     public BaseResponse<Integer> addCarousel(@RequestBody Carousel carousel) {
         if(carousel == null){
-            return ResultUtils.error(null, REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
-        return carouselService.addCarousel(carousel);
+        Integer carouselId = carouselService.addCarousel(carousel);
+        return ResultUtils.success(carouselId, ADD_SUCCESS);
     }
 
     /**
@@ -53,9 +56,10 @@ public class ResourcesController {
     @DeleteMapping("/carousel/{carouselId}")
     public BaseResponse<Boolean> deleteCarousel(@PathVariable("carouselId")Integer carouselId) {
         if(carouselId == null){
-            return ResultUtils.error(null, REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
-        return carouselService.deleteById(carouselId);
+        Boolean success = carouselService.deleteById(carouselId);
+        return ResultUtils.success(success,DELETE_SUCCESS);
     }
 
 }

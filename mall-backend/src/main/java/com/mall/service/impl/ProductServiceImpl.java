@@ -7,8 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.mall.base.BaseResponse;
-import com.mall.base.ResultUtils;
+import com.mall.exception.BusinessException;
 import com.mall.model.domain.Product;
 import com.mall.mapper.ProductMapper;
 import com.mall.model.domain.ProductPicture;
@@ -27,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.mall.base.ErrorCode.*;
 import static com.mall.constant.MessageConstant.*;
 import static com.mall.constant.RedisConstant.ACCESSORY_CATEGORY_KEY;
 import static com.mall.constant.RedisConstant.APPLIANCE_CATEGORY_KEY;
@@ -63,7 +63,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         Integer categoryId = categoryService.getIdByName(categoryName);
         //根据分类号获取商品
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Product::getCategoryId, categoryId).eq(Product::getIsAllowance,0)
+        wrapper.eq(Product::getCategoryId, categoryId).eq(Product::getIsAllowance, 0)
                 .orderByDesc(Product::getProductSales).last("LIMIT 7");
         return productMapper.selectList(wrapper);
     }
@@ -74,7 +74,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         //根据分类名获取redis中销量前7
         Set<String> range = stringRedisTemplate.opsForZSet().reverseRange(key, 0, 6);
         if (range != null) {
-            System.out.println("range = " + range);
+            System.out.println("range in redis = " + range);
             List<Product> collect = range.stream().map(jsonStr -> JSONUtil.toBean(jsonStr, Product.class)).collect(Collectors.toList());
             if (!collect.isEmpty()) {
                 return collect;
@@ -87,11 +87,15 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
             categoryIds[i] = categoryId;
         }
         //根据分类号获取销量前7名
-        System.out.println("这里有被执行了一次？？？？？");
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(Product::getCategoryId, Arrays.asList(categoryIds)).eq(Product::getIsAllowance,0)//分类号查询
+        wrapper.in(Product::getCategoryId, Arrays.asList(categoryIds)).eq(Product::getIsAllowance, 0)//分类号查询
                 .orderByDesc(Product::getProductSales).last("LIMIT 7");
-        return productMapper.selectList(wrapper);
+        List<Product> products = productMapper.selectList(wrapper);
+        if (products == null) {
+            throw new BusinessException(GET_MESSAGE_ERROR, GET_HOT_PRODUCT_ERROR);
+        } else {
+            return products;
+        }
     }
 
     @Override
@@ -99,7 +103,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         IPage<Product> page = new Page<>(currentPage, pageSize);
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         //根据id降序查询让最新的产品在前面
-        wrapper.orderByDesc(Product::getProductId).eq(Product::getIsAllowance,0);
+        wrapper.orderByDesc(Product::getProductId).eq(Product::getIsAllowance, 0);
         return productMapper.selectPage(page, wrapper);
     }
 
@@ -108,7 +112,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         IPage<Product> page = new Page<>(currentPage, pageSize);
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         //根据id降序查询让最新的产品在前面
-        wrapper.eq(Product::getCategoryId, categoryId).eq(Product::getIsAllowance,0)
+        wrapper.eq(Product::getCategoryId, categoryId).eq(Product::getIsAllowance, 0)
                 .orderByDesc(Product::getProductId);
         return productMapper.selectPage(page, wrapper);
     }
@@ -117,7 +121,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
     public IPage<Product> getProductBySearch(String queryString, int currentPage, int pageSize) {
         IPage<Product> page = new Page<>(currentPage, pageSize);
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Product::getIsAllowance,0)
+        wrapper.eq(Product::getIsAllowance, 0)
                 .like(Product::getProductName, queryString)
                 .or().like(Product::getProductTitle, queryString)
                 .or().like(Product::getProductIntro, queryString);
@@ -125,7 +129,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
     }
 
     @Override
-    public BaseResponse<Integer> addProduct(Product product) {
+    public Integer addProduct(Product product) {
         //对数值进行校验
         String productName = product.getProductName();
         String productTitle = product.getProductTitle();
@@ -135,7 +139,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         Integer productNum = product.getProductNum();
         String productPicture = product.getProductPicture();
         if (StringUtils.isAnyBlank(productName, productPicture, productTitle) || productNum == null || categoryId == null || productPrice == null || productSellingPrice == null) {
-            return ResultUtils.fail(PRODUCT_INFORMATION_ERROR);
+            throw new BusinessException(PARAMS_PATTERN_ERROR,PRODUCT_INFORMATION_ERROR);
         }
         //封装
         Product newProduct = new Product();
@@ -149,24 +153,24 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         newProduct.setProductNum(productNum);
         newProduct.setProductSales(0);
         boolean success = this.save(newProduct);
-        if (success) {
-            return ResultUtils.success(newProduct.getProductId(), ADD_SUCCESS);
+        if (!success) {
+            throw new BusinessException(REQUEST_SERVICE_ERROR,ADD_FAIL);
         }
-        return ResultUtils.fail(ADD_FAIL);
+        return newProduct.getProductId();
     }
 
     @Override
     @Transactional
-    public BaseResponse<Boolean> addProductPictures(String[] pictures, Integer productId, String pictureIntro) {
+    public Boolean addProductPictures(String[] pictures, Integer productId, String pictureIntro) {
         if (pictures.length == 0) {
-            return ResultUtils.error(false, REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         //判断商品是否存在
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Product::getProductId, productId);
         long count = count(wrapper);
         if (count == 0) {
-            return ResultUtils.fail(PRODUCT_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR,PRODUCT_NOT_EXIST);
         }
         //遍历添加
         ProductPicture productPicture;
@@ -177,16 +181,16 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
             productPicture.setIntro(pictureIntro);
             productPictureService.save(productPicture);
         }
-        return ResultUtils.success(true, ADD_SUCCESS);
+        return Boolean.TRUE;
     }
 
     @Override
     @Transactional
-    public BaseResponse<Boolean> deleteProduct(Integer productId) {
+    public Boolean deleteProduct(Integer productId) {
         //查询是否存在
         Product product = getById(productId);
         if (product == null) {
-            return ResultUtils.fail(PRODUCT_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR,PRODUCT_NOT_EXIST);
         }
         //删除商品及对应的图片
         boolean success = removeById(productId);
@@ -203,47 +207,47 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
                 stringRedisTemplate.opsForZSet().remove(ACCESSORY_CATEGORY_KEY, JSONUtil.toJsonStr(product));
             }
         }
-        if (success) {
-            return ResultUtils.success(true, DELETE_SUCCESS);
+        if (!success) {
+            throw new BusinessException(REQUEST_SERVICE_ERROR, DELETE_FAIL);
         }
-        return ResultUtils.error(false, DELETE_FAIL);
+        return Boolean.TRUE;
     }
 
     @Override
-    public BaseResponse<Boolean> removeProductPictures(String[] pictures, Integer productId) {
+    public Boolean removeProductPictures(String[] pictures, Integer productId) {
         if (pictures.length == 0) {
-            return ResultUtils.error(false, REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         //查询是否存在
         Product product = getById(productId);
         if (product == null) {
-            return ResultUtils.fail(PRODUCT_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR,PRODUCT_NOT_EXIST);
         }
         //删除指定图片
         LambdaQueryWrapper<ProductPicture> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ProductPicture::getProductId, productId).in(ProductPicture::getProductPictureUrl, Arrays.asList(pictures));
         boolean success = productPictureService.remove(wrapper);
-        if (success) {
-            return ResultUtils.success(true, DELETE_SUCCESS);
+        if (!success) {
+            throw new BusinessException(REQUEST_SERVICE_ERROR, DELETE_FAIL);
         }
-        return ResultUtils.error(false, DELETE_FAIL);
+        return Boolean.TRUE;
     }
 
     @Override
-    public BaseResponse<Boolean> updateProduct(Product product) {
+    public Boolean updateProduct(Product product) {
         //查询是否存在
         Integer productId = product.getProductId();
         Product queryResult = getById(productId);
         if (queryResult == null) {
-            return ResultUtils.fail(PRODUCT_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR, PRODUCT_NOT_EXIST);
         }
         //进行更新
         // 1.更新数据库
         LambdaUpdateWrapper<Product> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(Product::getProductId, productId);
-        boolean success = update(product,wrapper);
+        boolean success = update(product, wrapper);
         if (!success) {
-            return ResultUtils.error(false, UPDATE_FAIL);
+            throw new BusinessException(REQUEST_SERVICE_ERROR, UPDATE_FAIL);
         }
         Product updatedProduct = getById(productId);
         //2.检查是否是热门商品
@@ -251,29 +255,27 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         if (categoryId != null) {
             //是热门分类商品就重写缓存
             if (categoryId > 1 && categoryId < 5) {
-                stringRedisTemplate.opsForZSet().remove(APPLIANCE_CATEGORY_KEY,JSONUtil.toJsonStr(queryResult));
+                stringRedisTemplate.opsForZSet().remove(APPLIANCE_CATEGORY_KEY, JSONUtil.toJsonStr(queryResult));
                 stringRedisTemplate.opsForZSet().add(APPLIANCE_CATEGORY_KEY,
-                        JSONUtil.toJsonStr(updatedProduct), Convert.convert(Double.class,updatedProduct.getProductSales()));
+                        JSONUtil.toJsonStr(updatedProduct), Convert.convert(Double.class, updatedProduct.getProductSales()));
             } else if (categoryId > 4) {
-                stringRedisTemplate.opsForZSet().remove(ACCESSORY_CATEGORY_KEY,JSONUtil.toJsonStr(queryResult));
+                stringRedisTemplate.opsForZSet().remove(ACCESSORY_CATEGORY_KEY, JSONUtil.toJsonStr(queryResult));
                 stringRedisTemplate.opsForZSet().add(ACCESSORY_CATEGORY_KEY,
-                        JSONUtil.toJsonStr(updatedProduct), Convert.convert(Double.class,updatedProduct.getProductSales()));
+                        JSONUtil.toJsonStr(updatedProduct), Convert.convert(Double.class, updatedProduct.getProductSales()));
             }
         }
-        return ResultUtils.success(true, UPDATE_SUCCESS);
+        return Boolean.TRUE;
     }
 
     @Override
     public List<Product> getProductByCategoryIds(Integer[] categoryList) {
-        if(categoryList == null) {
+        if (categoryList == null) {
             return Collections.emptyList();
         }
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(Product::getCategoryId,Arrays.asList(categoryList)).eq(Product::getIsAllowance,0);
+        wrapper.in(Product::getCategoryId, Arrays.asList(categoryList)).eq(Product::getIsAllowance, 0);
         return list(wrapper);
     }
-
-
 }
 
 

@@ -43,7 +43,7 @@
                product_num,
                product_price,
                is_allowance
-        from (select * from shoppingcart where user_id = #{userId} and is_deleted = 0 and p.is_paid = 0) t,
+        from (select * from shoppingcart where user_id = #{userId} and is_deleted = 0 and is_paid = 0) t,
              product p
         where t.product_id = p.product_id
           and p.is_deleted = 0

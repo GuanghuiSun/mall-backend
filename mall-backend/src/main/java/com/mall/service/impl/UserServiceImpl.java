@@ -2,11 +2,13 @@ package com.mall.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mall.base.BaseResponse;
 import com.mall.base.ResultUtils;
+import com.mall.exception.BusinessException;
 import com.mall.model.domain.ShoppingCart;
 import com.mall.model.domain.User;
 import com.mall.model.domain.UserDTO;
@@ -24,15 +26,13 @@ import org.springframework.util.DigestUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.mall.base.ErrorCode.*;
 import static com.mall.constant.MessageConstant.*;
 import static com.mall.constant.RedisConstant.LOGIN_USER_TTL;
 import static com.mall.constant.RedisConstant.USER_LOGIN_STATE;
@@ -58,32 +58,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     private ShoppingCartService shoppingCartService;
 
     @Override
-    public BaseResponse<Long> userRegister(String username, String password, String checkPassword) {
+    public Integer userRegister(String username, String password, String checkPassword) {
         //1.校验非空
         if (StringUtils.isAnyBlank(username, password, checkPassword)) {
-            return ResultUtils.error(null, EMPTY_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR,EMPTY_REGISTER_FAIL);
         }
         //1.1校验用户名
         if (username.length() < 4) {
-            return ResultUtils.error(null, LENGTH_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR,LENGTH_REGISTER_FAIL);
         }
         String valuePattern = "^[a-z_\\d]{4,20}$";
         Matcher matcher = Pattern.compile(valuePattern).matcher(username);
         if (!matcher.find()) {
-            return ResultUtils.error(null, PATTERN_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR,PATTERN_REGISTER_FAIL);
         }
         //1.2校验密码
         if (password.length() < 6) {
-            return ResultUtils.error(null, LENGTH_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR,LENGTH_REGISTER_FAIL);
         }
         //1.3校验两次密码是否一样
         if (!password.equals(checkPassword)) {
-            return ResultUtils.error(null, CHECK_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR,CHECK_REGISTER_FAIL);
         }
         //2.账户不能重复
-        if (checkUsername(username) < 0) {
-            return ResultUtils.error(null, REPEAT_USERNAME_FAIL);
-        }
+        checkUsername(username);
         //4.对密码进行加密
         String handledPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes(StandardCharsets.UTF_8));
         //5.将用户数据插入到数据库
@@ -92,35 +90,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserPassword(handledPassword);
         boolean save = this.save(user);
         if (!save) {
-            return ResultUtils.error(null, ERROR_REGISTER_FAIL);
+            throw new BusinessException(REQUEST_SERVICE_ERROR,ERROR_REGISTER_FAIL);
         }
-        return ResultUtils.success(Long.valueOf(user.getUserId()), REGISTER_SUCCESS);
+        return user.getUserId();
     }
 
     @Override
-    public BaseResponse<String> userLogin(String username, String password, HttpServletRequest request) {
+    public String userLogin(String username, String password, HttpServletRequest request) {
         //1.校验非空
         if (StringUtils.isAnyBlank(username, password)) {
-            return ResultUtils.error(null, EMPTY_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         //1.1校验用户名
         if (username.length() < 4) {
-            return ResultUtils.error(null, LENGTH_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR,LENGTH_REGISTER_FAIL);
         }
         String valuePattern = "^[a-z_\\d]{4,20}$";
         Matcher matcher = Pattern.compile(valuePattern).matcher(username);
         if (!matcher.find()) {
-            return ResultUtils.error(null, PATTERN_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR,PATTERN_REGISTER_FAIL);
         }
         //1.2校验密码
         if (password.length() < 6) {
-            return ResultUtils.error(null, LENGTH_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR,LENGTH_REGISTER_FAIL);
         }
         LambdaQueryWrapper<User> validWrapper = new LambdaQueryWrapper<>();
         validWrapper.eq(User::getUsername, username).eq(User::getIsValid, 0);
         Long count = userMapper.selectCount(validWrapper);
         if (count == 0) {
-            return ResultUtils.error(null, USER_NOT_VALID);
+            throw new BusinessException(REQUEST_SERVICE_ERROR,USER_NOT_VALID);
         }
         //校验用户名和密码
         String handledPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes(StandardCharsets.UTF_8));
@@ -130,7 +128,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //用户不存在
         if (user == null) {
             log.info("user login failed, username can not match password");
-            return ResultUtils.error(null, CHECK_PASSWORD_FAIL);
+            throw new BusinessException(REQUEST_SERVICE_ERROR,CHECK_PASSWORD_FAIL);
         }
         //对用户脱敏
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
@@ -145,65 +143,54 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         stringRedisTemplate.expire(tokenKey, LOGIN_USER_TTL, TimeUnit.MINUTES);
         //保存用户到UserHolder
         UserHolder.saveUser(userDTO);
-        return ResultUtils.success(token, LOGIN_SUCCESS);
+        return token;
     }
 
     @Override
-    public long checkUsername(String username) {
+    public Boolean checkUsername(String username) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username);
         long count = this.count(wrapper);
         if (count > 0) {
-            return -1;
+            throw new BusinessException(PARAMS_PATTERN_ERROR,REPEAT_USERNAME_FAIL);
         }
-        return 1;
+        return false;
     }
 
     @Override
-    public BaseResponse<List<UserDTO>> getAllUsers() {
+    public List<UserDTO> getAllUsers() {
         List<User> users = list();
         if (users == null) {
-            return ResultUtils.fail(SELECT_FAIL);
+            return Collections.emptyList();
         }
-        List<UserDTO> handledUsers = users.stream()
+        return users.stream()
                 .map(user -> BeanUtil.copyProperties(user, UserDTO.class)).collect(Collectors.toList());
-        return ResultUtils.success(handledUsers, SELECT_SUCCESS);
     }
 
     @Override
-    public BaseResponse<Boolean> disableUser(Integer userId) {
+    public Boolean disableUser(Integer userId) {
         User user = getById(userId);
         if (user == null) {
-            return ResultUtils.error(false, USER_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR,USER_NOT_EXIST);
         }
         LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(User::getUserId, userId).set(User::getIsValid, 1);
-        boolean success = update(wrapper);
-        if (success) {
-            return ResultUtils.success(true, UPDATE_SUCCESS);
-        }
-        return ResultUtils.error(false, UPDATE_FAIL);
+        return update(wrapper);
     }
 
     @Override
-    public BaseResponse<Boolean> deleteUser(Integer userId) {
+    public Boolean deleteUser(Integer userId) {
         User user = getById(userId);
         if (user == null) {
-            return ResultUtils.error(false, USER_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR,USER_NOT_EXIST);
         }
         //删除购物车中的信息
         LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ShoppingCart::getUserId, userId);
-        boolean remove = shoppingCartService.remove(wrapper);
+        shoppingCartService.remove(wrapper);
         //删除用户表中的信息
-        boolean success = removeById(userId);
-        if (remove && success) {
-            return ResultUtils.success(true, DELETE_SUCCESS);
-        }
-        return ResultUtils.error(false, DELETE_FAIL);
+        return removeById(userId);
     }
-
-
 }
 
 

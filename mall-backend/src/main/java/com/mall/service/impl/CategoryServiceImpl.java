@@ -3,6 +3,7 @@ package com.mall.service.impl;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mall.exception.BusinessException;
 import com.mall.model.domain.Category;
 import com.mall.service.CategoryService;
 import com.mall.mapper.CategoryMapper;
@@ -10,17 +11,20 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.mall.base.ErrorCode.*;
+import static com.mall.constant.MessageConstant.*;
 import static com.mall.constant.RedisConstant.CACHE_CATEGORY_KEY;
 
 /**
-* @author sgh
-*/
+ * @author sgh
+ */
 @Service
 public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
-    implements CategoryService{
+        implements CategoryService {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -28,10 +32,10 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
     @Override
     public Integer getIdByName(String categoryName) {
         LambdaQueryWrapper<Category> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Category::getCategoryName,categoryName);
+        wrapper.eq(Category::getCategoryName, categoryName);
         Category result = this.getOne(wrapper);
-        if(result==null){
-            return -1;
+        if (result == null) {
+            throw new BusinessException(GET_MESSAGE_ERROR, INFORMATION_NOT_EXIST);
         }
         return result.getCategoryId();
     }
@@ -40,13 +44,16 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category>
     public List<Category> getCategoryList() {
         //从redis缓存中获取分类信息                  从左到右
         List<String> category = stringRedisTemplate.opsForList().range(CACHE_CATEGORY_KEY, 0, -1);
-        if(category != null && !category.isEmpty()){
+        if (category != null && !category.isEmpty()) {
             return category.stream()
                     .map(jsonString -> JSONUtil.toBean(jsonString, Category.class))
                     .collect(Collectors.toList());
         }
         //没有查询到缓存，去查数据库
         List<Category> list = this.list();
+        if (list == null) {
+            return Collections.emptyList();
+        }
         //写入缓存
         List<String> collect = list.stream().map(JSONUtil::toJsonStr).collect(Collectors.toList());
         //右边插入所有种类信息

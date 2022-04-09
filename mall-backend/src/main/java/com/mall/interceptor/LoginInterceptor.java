@@ -1,6 +1,7 @@
 package com.mall.interceptor;
 
-import com.mall.model.domain.User;
+import com.mall.base.ErrorCode;
+import com.mall.exception.BusinessException;
 import com.mall.model.domain.UserDTO;
 import com.mall.utils.UserHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -12,16 +13,15 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * 登录拦截
  *
- * @authoe sgh
+ * @author sgh
  */
 public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         UserDTO user = UserHolder.getUser();
         if(user == null) {
-//            response.setStatus(401);
-            return false;
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
         return true;
     }

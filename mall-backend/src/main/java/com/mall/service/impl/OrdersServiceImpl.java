@@ -1,5 +1,4 @@
 package com.mall.service.impl;
-import cn.hutool.core.util.BooleanUtil;
 
 import java.util.*;
 
@@ -18,12 +17,12 @@ import javax.annotation.Resource;
 import static com.mall.constant.RedisConstant.INCR_ORDER_KEY;
 
 /**
-* @author sgh
-*/
+ * @author sgh
+ */
 @Service
 @Transactional
 public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
-    implements OrdersService{
+        implements OrdersService {
 
     @Resource
     private OrdersMapper ordersMapper;
@@ -37,26 +36,26 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     @Override
     public List<List<Orders>> getOrders(String userId) {
         List<Orders> orders = ordersMapper.getOrders(userId);
-        if(orders == null) {
+        if (orders == null) {
             return Collections.emptyList();
         }
         //将订单按订单编号进行分组
         List<List<Orders>> result = new ArrayList<>();
-        Map<Long,List<Orders>> map = new HashMap<>();
-        for(Orders order : orders){
+        Map<Long, List<Orders>> map = new HashMap<>();
+        for (Orders order : orders) {
             List<Orders> value;
-            if(map.containsKey(order.getOrderId())){
+            if (map.containsKey(order.getOrderId())) {
                 value = map.get(order.getOrderId());
 
-            }else{
+            } else {
                 value = new ArrayList<>();
             }
             value.add(order);
-            map.put(order.getOrderId(),value);
+            map.put(order.getOrderId(), value);
         }
         List<Long> ids = new ArrayList<>(map.keySet());
         ids.sort((o1, o2) -> o1 - o2 > 0 ? -1 : 1);
-        for(Long orderId : ids){
+        for (Long orderId : ids) {
             result.add(map.get(orderId));
         }
         return result;
@@ -66,7 +65,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     public Boolean addOrders(String userId, ShoppingCart[] shoppingCarts) {
         //由redisID生成器生成唯一的订单id
         long orderId = redisIdWorker.nextId(INCR_ORDER_KEY);
-        for(ShoppingCart shoppingCart : shoppingCarts){
+        for (ShoppingCart shoppingCart : shoppingCarts) {
             Orders orders = new Orders();
             orders.setOrderId(orderId);
             orders.setUserId(Integer.parseInt(userId));
@@ -75,14 +74,14 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
             orders.setProductPrice(shoppingCart.getProduct().getProductSellingPrice());
             //将订单插入到数据库中
             boolean save = this.save(orders);
-            if(!save){
+            if (!save) {
                 return false;
             }
         }
         //更改购物车中的相关数据
-        for(ShoppingCart shoppingCart : shoppingCarts){
+        for (ShoppingCart shoppingCart : shoppingCarts) {
             Boolean result = shoppingCartService.updateProductStatus(String.valueOf(shoppingCart.getUserId()), String.valueOf(shoppingCart.getProductId()));
-            if(Boolean.FALSE.equals(result)){
+            if (Boolean.FALSE.equals(result)) {
                 return false;
             }
         }
@@ -92,26 +91,26 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     @Override
     public List<List<Orders>> getAllOrders() {
         List<Orders> orders = list();
-        if(orders == null) {
+        if (orders == null) {
             return Collections.emptyList();
         }
         //将订单按订单编号进行分组
         List<List<Orders>> result = new ArrayList<>();
-        Map<Long,List<Orders>> map = new HashMap<>();
-        for(Orders order : orders){
+        Map<Long, List<Orders>> map = new HashMap<>();
+        for (Orders order : orders) {
             List<Orders> value;
-            if(map.containsKey(order.getOrderId())){
+            if (map.containsKey(order.getOrderId())) {
                 value = map.get(order.getOrderId());
 
-            }else{
+            } else {
                 value = new ArrayList<>();
             }
             value.add(order);
-            map.put(order.getOrderId(),value);
+            map.put(order.getOrderId(), value);
         }
         List<Long> ids = new ArrayList<>(map.keySet());
         ids.sort((o1, o2) -> o1 - o2 > 0 ? -1 : 1);
-        for(Long orderId : ids){
+        for (Long orderId : ids) {
             result.add(map.get(orderId));
         }
         return result;

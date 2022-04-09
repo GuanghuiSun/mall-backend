@@ -3,6 +3,7 @@ package com.mall.controller;
 import com.mall.base.BaseResponse;
 import com.mall.base.ResultUtils;
 import com.mall.constant.MessageConstant;
+import com.mall.exception.BusinessException;
 import com.mall.model.domain.Orders;
 import com.mall.model.domain.ShoppingCart;
 import com.mall.model.request.OrderRequest;
@@ -13,7 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.List;
 
-import static com.mall.constant.MessageConstant.SELECT_SUCCESS;
+import static com.mall.base.ErrorCode.*;
+import static com.mall.constant.MessageConstant.*;
 
 @RestController
 @RequestMapping("/order")
@@ -31,11 +33,11 @@ public class OrderController {
     @PostMapping("/getOrder")
     public BaseResponse<List<List<Orders>>> getOrder(@RequestBody OrderRequest orderRequest) {
         if (orderRequest == null) {
-            return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         String userId = orderRequest.getUserId();
         if (StringUtils.isAnyBlank(userId)) {
-            return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         List<List<Orders>> orders = ordersService.getOrders(userId);
         return ResultUtils.success(orders, SELECT_SUCCESS);
@@ -49,18 +51,18 @@ public class OrderController {
     @PostMapping("/addOrder")
     public BaseResponse<Boolean> addOrders(@RequestBody OrderRequest orderRequest){
         if (orderRequest == null) {
-            return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         String userId = orderRequest.getUserId();
         ShoppingCart[] shoppingCart = orderRequest.getShoppingCart();
         if (StringUtils.isAnyBlank(userId) || shoppingCart == null || shoppingCart.length == 0) {
-            return ResultUtils.error(null, MessageConstant.REQUEST_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR);
         }
         Boolean result = ordersService.addOrders(userId, shoppingCart);
         if(Boolean.TRUE.equals(result)){
-            return ResultUtils.success(true,MessageConstant.ORDER_SUCCESS);
+            return ResultUtils.success(true,ORDER_SUCCESS);
         } else {
-            return ResultUtils.error(false,MessageConstant.ORDER_FAIL);
+            throw new BusinessException(REQUEST_SERVICE_ERROR,ORDER_FAIL);
         }
     }
 

@@ -5,7 +5,9 @@ import cn.hutool.core.convert.Convert;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mall.base.BaseResponse;
+import com.mall.base.ErrorCode;
 import com.mall.base.ResultUtils;
+import com.mall.exception.BusinessException;
 import com.mall.model.domain.Carousel;
 import com.mall.service.CarouselService;
 import com.mall.mapper.CarouselMapper;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.mall.base.ErrorCode.*;
 import static com.mall.constant.MessageConstant.*;
 import static com.mall.constant.RedisConstant.CACHE_CAROUSEL_KEY;
 
@@ -56,31 +59,30 @@ public class CarouselServiceImpl extends ServiceImpl<CarouselMapper, Carousel>
     }
 
     @Override
-    public BaseResponse<Integer> addCarousel(Carousel carousel) {
+    public Integer addCarousel(Carousel carousel) {
         boolean success = this.save(carousel);
         if (!success) {
-            return ResultUtils.fail(ADD_SUCCESS);
+            throw new BusinessException(REQUEST_SERVICE_ERROR,ADD_FAIL);
         }
         carousel.setIsDeleted((byte) 0);
         // 更新缓存
         stringRedisTemplate.opsForZSet().add(CACHE_CAROUSEL_KEY, JSONUtil.toJsonStr(carousel), carousel.getCarouselId());
-
-        return ResultUtils.success(carousel.getCarouselId(), ADD_SUCCESS);
+        return carousel.getCarouselId();
     }
 
     @Override
-    public BaseResponse<Boolean> deleteById(Integer carouselId) {
+    public Boolean deleteById(Integer carouselId) {
         Carousel carousel = getById(carouselId);
         if (carousel == null) {
-            return ResultUtils.error(false, CAROUSEL_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR,CAROUSEL_NOT_EXIST);
         }
         boolean success = removeById(carouselId);
-        if (success) {
-            //更新缓存
-            stringRedisTemplate.opsForZSet().remove(CACHE_CAROUSEL_KEY, JSONUtil.toJsonStr(carousel));
-            return ResultUtils.success(true, DELETE_SUCCESS);
+        if (!success) {
+            throw new BusinessException(REQUEST_SERVICE_ERROR,DELETE_FAIL);
         }
-        return ResultUtils.error(false, DELETE_FAIL);
+        //更新缓存
+        stringRedisTemplate.opsForZSet().remove(CACHE_CAROUSEL_KEY, JSONUtil.toJsonStr(carousel));
+        return Boolean.TRUE;
     }
 }
 

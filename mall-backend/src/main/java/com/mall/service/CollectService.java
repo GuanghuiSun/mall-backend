@@ -31,5 +31,5 @@ public interface CollectService extends IService<Collect> {
      * @param productId 商品id
      * @return
      */
-    Integer addCollect(String userId, String productId);
+    Boolean addCollect(String userId, String productId);
 }
