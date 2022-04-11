@@ -1,9 +1,7 @@
 package com.mall.model.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -101,6 +99,13 @@ public class Product implements Serializable {
      */
     @TableField(value = "create_time")
     private Date createTime;
+
+    /**
+     * 版本号
+     */
+    @TableField(value = "version")
+    @Version
+    private Integer version;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

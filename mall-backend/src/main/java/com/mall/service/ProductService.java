@@ -12,14 +12,6 @@ import java.util.List;
 public interface ProductService extends IService<Product> {
 
     /**
-     * 获取指定商品的可购买最大值
-     *
-     * @param productId 商品id
-     * @return
-     */
-    Integer getMaxPurchasableNum(String productId);
-
-    /**
      * 根据分类及销量获取商品信息前七个
      *
      * @param categoryName 分类名称
@@ -43,6 +35,14 @@ public interface ProductService extends IService<Product> {
      * @return
      */
     IPage<Product> getALlProduct(int currentPage, int pageSize);
+
+    /**
+     * 下单 削减库存
+     * @param num 数量
+     * @param productId 商品
+     * @return
+     */
+    Boolean orderProduct(Integer num, Integer productId);
 
     /**
      * 根据分类分页获取所有商品信息

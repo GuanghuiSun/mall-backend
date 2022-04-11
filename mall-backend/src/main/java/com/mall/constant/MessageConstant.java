@@ -51,6 +51,7 @@ public class MessageConstant {
     public static final String CHANGE_VALID_SUCCESS = "禁用成功！";
     public static final String CHANGE_VALID_FAIL = "禁用失败！";
     public static final String INFORMATION_NOT_EXIST = "信息不存在！";
+    public static final String INVENTORY_SHORTAGE_ERROR = "库存不足！";
 
 
 

@@ -10,14 +10,14 @@ import com.mall.model.domain.ShoppingCart;
 import com.mall.service.ProductService;
 import com.mall.service.ShoppingCartService;
 
-import java.util.Collections;
+import java.util.*;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import static com.mall.constant.RedisConstant.INVENTORY_KEY;
 
 /**
  * @author sgh
@@ -30,6 +30,9 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
 
     @Resource
     private ProductService productService;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public List<ShoppingCart> getShoppingCart(String userId) {
@@ -50,7 +53,8 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     @Override
     public Boolean updateShoppingCart(String userId, String productId, Integer num) {
         //查询该商品可购买的最大值
-        Integer maxPurchasableNum = productService.getMaxPurchasableNum(productId);
+        String key = INVENTORY_KEY + ":" + productId;
+        int maxPurchasableNum = Integer.parseInt(Objects.requireNonNull(stringRedisTemplate.opsForValue().get(key)));
         if (maxPurchasableNum < num) {
             return false;
         }
@@ -86,8 +90,9 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         } else {
             //如果商品已到限购数量
             Integer hadNum = shoppingCart.getNum();
-            Integer maxNum = productService.getMaxPurchasableNum(productId);
-            if (hadNum.equals(maxNum)) {
+            String key = INVENTORY_KEY + ":" + productId;
+            int maxPurchasableNum = Integer.parseInt(Objects.requireNonNull(stringRedisTemplate.opsForValue().get(key)));
+            if (hadNum.equals(maxPurchasableNum)) {
                 //已达上限
                 map.put(shoppingCart, -1);
                 return map;

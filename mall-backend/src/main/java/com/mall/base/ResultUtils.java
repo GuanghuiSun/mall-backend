@@ -9,11 +9,11 @@ public class ResultUtils {
      * @return
      */
     public static <T> BaseResponse<T> success(T data, String message) {
-        return new BaseResponse<>(200, data, message);
+        return new BaseResponse<>(200, data, message,message);
     }
 
     public static <T> BaseResponse<T> success(int code, T data, String message) {
-        return new BaseResponse<>(code, data, message);
+        return new BaseResponse<>(code, data, message,message);
     }
 
     public static <T> BaseResponse<T> error(int code, T data, String message) {

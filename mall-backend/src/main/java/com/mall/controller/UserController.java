@@ -83,9 +83,6 @@ public class UserController {
     public BaseResponse<UserDTO> queryMe() {
         UserDTO user = UserHolder.getUser();
         System.out.println("UserDTO:"+user);
-        if (user == null) {
-            throw new BusinessException(NOT_LOGIN_ERROR,LOGIN_FAIL);
-        }
         return ResultUtils.success(user, LOGIN_SUCCESS);
     }
 

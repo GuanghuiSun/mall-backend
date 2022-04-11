@@ -25,4 +25,8 @@ class ProductServiceImplTest {
         hotProduct.forEach(System.out::println);
     }
 
+    @Test
+    void orderProduct() {
+        productService.orderProduct(2,1);
+    }
 }

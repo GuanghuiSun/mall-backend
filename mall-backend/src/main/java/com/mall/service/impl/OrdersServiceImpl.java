@@ -3,10 +3,13 @@ package com.mall.service.impl;
 import java.util.*;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mall.base.ErrorCode;
+import com.mall.exception.BusinessException;
 import com.mall.model.domain.Orders;
 import com.mall.model.domain.ShoppingCart;
 import com.mall.service.OrdersService;
 import com.mall.mapper.OrdersMapper;
+import com.mall.service.ProductService;
 import com.mall.service.ShoppingCartService;
 import com.mall.utils.RedisIdWorker;
 import org.springframework.stereotype.Service;
@@ -14,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
+import static com.mall.base.ErrorCode.REQUEST_SERVICE_ERROR;
+import static com.mall.constant.MessageConstant.INVENTORY_SHORTAGE_ERROR;
+import static com.mall.constant.MessageConstant.ORDER_FAIL;
 import static com.mall.constant.RedisConstant.INCR_ORDER_KEY;
 
 /**
@@ -32,6 +38,9 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
     @Resource
     private ShoppingCartService shoppingCartService;
+
+    @Resource
+    private ProductService productService;
 
     @Override
     public List<List<Orders>> getOrders(String userId) {
@@ -66,6 +75,12 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         //由redisID生成器生成唯一的订单id
         long orderId = redisIdWorker.nextId(INCR_ORDER_KEY);
         for (ShoppingCart shoppingCart : shoppingCarts) {
+            //减库存
+            Boolean success = productService.orderProduct(shoppingCart.getNum(), shoppingCart.getProductId());
+            if (Boolean.FALSE.equals(success)) {
+                throw new BusinessException(REQUEST_SERVICE_ERROR, ORDER_FAIL);
+            }
+            //创建订单
             Orders orders = new Orders();
             orders.setOrderId(orderId);
             orders.setUserId(Integer.parseInt(userId));

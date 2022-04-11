@@ -20,16 +20,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.mall.base.ErrorCode.*;
 import static com.mall.constant.MessageConstant.*;
-import static com.mall.constant.RedisConstant.ACCESSORY_CATEGORY_KEY;
-import static com.mall.constant.RedisConstant.APPLIANCE_CATEGORY_KEY;
+import static com.mall.constant.RedisConstant.*;
 
 /**
  * @author sgh
@@ -49,13 +45,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-
-    @Override
-    public Integer getMaxPurchasableNum(String productId) {
-        Product product = this.getById(productId);
-        int maxPurchasableNum = product.getProductNum() - product.getProductSales();
-        return Math.max(maxPurchasableNum, 0);
-    }
 
     @Override
     public List<Product> getProductByCategoryName(String categoryName) {
@@ -108,6 +97,26 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
     }
 
     @Override
+    public Boolean orderProduct(Integer num, Integer productId) {
+        //redis判断库存
+        String key = INVENTORY_KEY + ":" + productId;
+        int max = Integer.parseInt(Objects.requireNonNull(stringRedisTemplate.opsForValue().get(key)));
+        if (num > max) {
+            throw new BusinessException(REQUEST_SERVICE_ERROR, INVENTORY_SHORTAGE_ERROR);
+        }
+        //库存充足
+        Product product = this.getById(productId);
+        product.setProductSales(product.getProductSales() + num);
+        boolean success = updateById(product);
+        if (success) {
+            //修改缓存库存
+            stringRedisTemplate.opsForValue().set(key, String.valueOf(max - num));
+            return Boolean.TRUE;
+        }
+        throw new BusinessException(REQUEST_SERVICE_ERROR, ORDER_FAIL);
+    }
+
+    @Override
     public IPage<Product> getProductByCategory(Integer categoryId, int currentPage, int pageSize) {
         IPage<Product> page = new Page<>(currentPage, pageSize);
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
@@ -139,7 +148,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         Integer productNum = product.getProductNum();
         String productPicture = product.getProductPicture();
         if (StringUtils.isAnyBlank(productName, productPicture, productTitle) || productNum == null || categoryId == null || productPrice == null || productSellingPrice == null) {
-            throw new BusinessException(PARAMS_PATTERN_ERROR,PRODUCT_INFORMATION_ERROR);
+            throw new BusinessException(PARAMS_PATTERN_ERROR, PRODUCT_INFORMATION_ERROR);
         }
         //封装
         Product newProduct = new Product();
@@ -154,8 +163,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         newProduct.setProductSales(0);
         boolean success = this.save(newProduct);
         if (!success) {
-            throw new BusinessException(REQUEST_SERVICE_ERROR,ADD_FAIL);
+            throw new BusinessException(REQUEST_SERVICE_ERROR, ADD_FAIL);
         }
+        //写入库存缓存
+        String key = INVENTORY_KEY + ":" + product.getProductId();
+        stringRedisTemplate.opsForValue().set(key, String.valueOf(product.getProductNum()));
         return newProduct.getProductId();
     }
 
@@ -170,7 +182,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         wrapper.eq(Product::getProductId, productId);
         long count = count(wrapper);
         if (count == 0) {
-            throw new BusinessException(GET_MESSAGE_ERROR,PRODUCT_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR, PRODUCT_NOT_EXIST);
         }
         //遍历添加
         ProductPicture productPicture;
@@ -190,7 +202,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         //查询是否存在
         Product product = getById(productId);
         if (product == null) {
-            throw new BusinessException(GET_MESSAGE_ERROR,PRODUCT_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR, PRODUCT_NOT_EXIST);
         }
         //删除商品及对应的图片
         boolean success = removeById(productId);
@@ -221,7 +233,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         //查询是否存在
         Product product = getById(productId);
         if (product == null) {
-            throw new BusinessException(GET_MESSAGE_ERROR,PRODUCT_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR, PRODUCT_NOT_EXIST);
         }
         //删除指定图片
         LambdaQueryWrapper<ProductPicture> wrapper = new LambdaQueryWrapper<>();
@@ -234,6 +246,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
     }
 
     @Override
+    @Transactional
     public Boolean updateProduct(Product product) {
         //查询是否存在
         Integer productId = product.getProductId();
@@ -243,12 +256,20 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         }
         //进行更新
         // 1.更新数据库
-        LambdaUpdateWrapper<Product> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(Product::getProductId, productId);
-        boolean success = update(product, wrapper);
+        product.setVersion(queryResult.getVersion());
+        boolean success = updateById(product);
         if (!success) {
             throw new BusinessException(REQUEST_SERVICE_ERROR, UPDATE_FAIL);
         }
+        //更新库存缓存
+        String key = INVENTORY_KEY + ":" + productId;
+        int max = Integer.parseInt(Objects.requireNonNull(stringRedisTemplate.opsForValue().get(key)));
+        int newNum = product.getProductNum() - queryResult.getProductNum();
+        if((max + newNum) < 0){
+            //主动削减库存至不足
+            stringRedisTemplate.opsForValue().set(key, "0");
+        }
+        stringRedisTemplate.opsForValue().set(key, String.valueOf(max + newNum));
         Product updatedProduct = getById(productId);
         //2.检查是否是热门商品
         Integer categoryId = updatedProduct.getCategoryId();
