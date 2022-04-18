@@ -61,24 +61,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public Integer userRegister(String username, String password, String checkPassword) {
         //1.校验非空
         if (StringUtils.isAnyBlank(username, password, checkPassword)) {
-            throw new BusinessException(PARAMS_NULL_ERROR,EMPTY_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_NULL_ERROR, EMPTY_REGISTER_FAIL);
         }
         //1.1校验用户名
         if (username.length() < 4) {
-            throw new BusinessException(PARAMS_PATTERN_ERROR,LENGTH_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR, LENGTH_REGISTER_FAIL);
         }
         String valuePattern = "^[a-z_\\d]{4,20}$";
         Matcher matcher = Pattern.compile(valuePattern).matcher(username);
         if (!matcher.find()) {
-            throw new BusinessException(PARAMS_PATTERN_ERROR,PATTERN_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR, PATTERN_REGISTER_FAIL);
         }
         //1.2校验密码
         if (password.length() < 6) {
-            throw new BusinessException(PARAMS_PATTERN_ERROR,LENGTH_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR, LENGTH_REGISTER_FAIL);
         }
         //1.3校验两次密码是否一样
         if (!password.equals(checkPassword)) {
-            throw new BusinessException(PARAMS_PATTERN_ERROR,CHECK_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR, CHECK_REGISTER_FAIL);
         }
         //2.账户不能重复
         checkUsername(username);
@@ -90,7 +90,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserPassword(handledPassword);
         boolean save = this.save(user);
         if (!save) {
-            throw new BusinessException(REQUEST_SERVICE_ERROR,ERROR_REGISTER_FAIL);
+            throw new BusinessException(REQUEST_SERVICE_ERROR, ERROR_REGISTER_FAIL);
         }
         return user.getUserId();
     }
@@ -103,22 +103,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         //1.1校验用户名
         if (username.length() < 4) {
-            throw new BusinessException(PARAMS_PATTERN_ERROR,LENGTH_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR, LENGTH_REGISTER_FAIL);
         }
         String valuePattern = "^[a-z_\\d]{4,20}$";
         Matcher matcher = Pattern.compile(valuePattern).matcher(username);
         if (!matcher.find()) {
-            throw new BusinessException(PARAMS_PATTERN_ERROR,PATTERN_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR, PATTERN_REGISTER_FAIL);
         }
         //1.2校验密码
         if (password.length() < 6) {
-            throw new BusinessException(PARAMS_PATTERN_ERROR,LENGTH_REGISTER_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR, LENGTH_REGISTER_FAIL);
         }
         LambdaQueryWrapper<User> validWrapper = new LambdaQueryWrapper<>();
         validWrapper.eq(User::getUsername, username).eq(User::getIsValid, 0);
         Long count = userMapper.selectCount(validWrapper);
         if (count == 0) {
-            throw new BusinessException(REQUEST_SERVICE_ERROR,USER_NOT_VALID);
+            throw new BusinessException(REQUEST_SERVICE_ERROR, USER_NOT_VALID);
         }
         //校验用户名和密码
         String handledPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes(StandardCharsets.UTF_8));
@@ -128,7 +128,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //用户不存在
         if (user == null) {
             log.info("user login failed, username can not match password");
-            throw new BusinessException(REQUEST_SERVICE_ERROR,CHECK_PASSWORD_FAIL);
+            throw new BusinessException(REQUEST_SERVICE_ERROR, CHECK_PASSWORD_FAIL);
         }
         //对用户脱敏
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
@@ -152,7 +152,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         wrapper.eq(User::getUsername, username);
         long count = this.count(wrapper);
         if (count > 0) {
-            throw new BusinessException(PARAMS_PATTERN_ERROR,REPEAT_USERNAME_FAIL);
+            throw new BusinessException(PARAMS_PATTERN_ERROR, REPEAT_USERNAME_FAIL);
         }
         return false;
     }
@@ -171,7 +171,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public Boolean disableUser(Integer userId) {
         User user = getById(userId);
         if (user == null) {
-            throw new BusinessException(GET_MESSAGE_ERROR,USER_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR, USER_NOT_EXIST);
         }
         LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(User::getUserId, userId).set(User::getIsValid, 1);
@@ -182,7 +182,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public Boolean deleteUser(Integer userId) {
         User user = getById(userId);
         if (user == null) {
-            throw new BusinessException(GET_MESSAGE_ERROR,USER_NOT_EXIST);
+            throw new BusinessException(GET_MESSAGE_ERROR, USER_NOT_EXIST);
         }
         //删除购物车中的信息
         LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();

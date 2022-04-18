@@ -9,7 +9,7 @@ spring:
       driver-class-name: com.mysql.cj.jdbc.Driver
       url: jdbc:mysql://localhost:3306/mall?serverTimezone=UTC
       username: root
-      password: 
+      password:
       # 配置获取连接等待超时的时间
       # 下面为连接池的补充设置，应用到上面所有数据源中
       # 初始化大小，最小，最大
@@ -23,9 +23,9 @@ spring:
       # 配置一个连接在池中最小生存的时间，单位是毫秒
       minEvictableIdleTimeMillis: 30000
   redis:
-    host: 
+    host:
     port: 6379
-    password: 
+    password:
     lettuce:
       pool:
         max-active: 10

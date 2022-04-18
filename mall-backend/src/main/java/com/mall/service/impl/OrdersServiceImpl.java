@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 
 import static com.mall.base.ErrorCode.REQUEST_SERVICE_ERROR;
-import static com.mall.constant.MessageConstant.INVENTORY_SHORTAGE_ERROR;
 import static com.mall.constant.MessageConstant.ORDER_FAIL;
 import static com.mall.constant.RedisConstant.INCR_ORDER_KEY;
 
