@@ -112,4 +112,11 @@ public interface ProductService extends IService<Product> {
      * @return
      */
     List<Product> getProductByCategoryIds(Integer[] categoryList);
+
+    /**
+     * 获取商品的最大购买
+     * @param productId 商品ID
+     * @return
+     */
+    Integer getMaxPurchasableNum(Integer productId);
 }

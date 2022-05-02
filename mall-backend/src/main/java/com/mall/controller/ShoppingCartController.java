@@ -6,6 +6,7 @@ import com.mall.exception.BusinessException;
 import com.mall.model.domain.ShoppingCart;
 import com.mall.model.request.ShoppingCartRequest;
 import com.mall.service.ShoppingCartService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,7 @@ import static com.mall.constant.MessageConstant.*;
 
 @RestController
 @RequestMapping("/shoppingCart")
+@Slf4j
 public class ShoppingCartController {
     @Resource
     private ShoppingCartService shoppingCartService;
@@ -26,7 +28,7 @@ public class ShoppingCartController {
     /**
      * 获取购物车所有信息
      * @param userId 用户id
-     * @return
+     * @return 购物车所有信息
      */
     @GetMapping("/getShoppingCart")
     public BaseResponse<List<ShoppingCart>> getShoppingCart(String userId){
@@ -34,13 +36,14 @@ public class ShoppingCartController {
             throw new BusinessException(PARAMS_NULL_ERROR);
         }
         List<ShoppingCart> shoppingCart = shoppingCartService.getShoppingCart(userId);
+        log.info(String.valueOf(shoppingCart));
         return ResultUtils.success(shoppingCart,SELECT_SUCCESS);
     }
 
     /**
      * 删除购物车中的商品
      * @param shoppingCartRequest 购物车请求
-     * @return
+     * @return 是否成功
      */
     @PostMapping("/deleteShoppingCart")
     public BaseResponse<Boolean> deleteShoppingCart(@RequestBody ShoppingCartRequest shoppingCartRequest){
@@ -63,7 +66,7 @@ public class ShoppingCartController {
     /**
      * 更新购物车
      * @param shoppingCartRequest 购物车请求
-     * @return
+     * @return 是否成功
      */
     @PostMapping("/updateShoppingCart")
     public BaseResponse<Boolean> updateShoppingCart(@RequestBody ShoppingCartRequest shoppingCartRequest){
@@ -87,7 +90,7 @@ public class ShoppingCartController {
     /**
      * 添加购物车
      * @param shoppingCartRequest 购物车请求
-     * @return
+     * @return 购物车
      */
     @PostMapping("/addShoppingCart")
     public BaseResponse<ShoppingCart> addShoppingCart(@RequestBody ShoppingCartRequest shoppingCartRequest){

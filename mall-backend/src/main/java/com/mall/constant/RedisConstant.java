@@ -12,4 +12,5 @@ public class RedisConstant {
     public static final String APPLIANCE_CATEGORY_KEY = "category:appliance&2&3&4";
     public static final String ACCESSORY_CATEGORY_KEY = "category:accessory&5&6&7&8";
     public static final String INVENTORY_KEY = "inventory";
+    public static final String SHOPPING_CART_KEY = "shoppingCart";
 }

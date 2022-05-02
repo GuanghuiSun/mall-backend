@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -98,8 +99,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
     @Override
     public Boolean orderProduct(Integer num, Integer productId) {
         //redis判断库存
-        String key = INVENTORY_KEY + ":" + productId;
-        int max = Integer.parseInt(Objects.requireNonNull(stringRedisTemplate.opsForValue().get(key)));
+        Integer max = this.getMaxPurchasableNum(productId);
         if (num > max) {
             throw new BusinessException(REQUEST_SERVICE_ERROR, INVENTORY_SHORTAGE_ERROR);
         }
@@ -109,6 +109,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         boolean success = updateById(product);
         if (success) {
             //修改缓存库存
+            String key = INVENTORY_KEY + ":" + productId;
             stringRedisTemplate.opsForValue().set(key, String.valueOf(max - num));
             return Boolean.TRUE;
         }
@@ -295,6 +296,24 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(Product::getCategoryId, Arrays.asList(categoryList)).eq(Product::getIsAllowance, 0);
         return list(wrapper);
+    }
+
+    @Override
+    public Integer getMaxPurchasableNum(Integer productId) {
+        //查缓存
+        String key = INVENTORY_KEY + ":" + productId;
+        String maxPurchasableNum = stringRedisTemplate.opsForValue().get(key);
+        if(maxPurchasableNum!=null){
+            return Integer.valueOf(maxPurchasableNum);
+        }
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getProductId,productId).eq(Product::getIsAllowance,0);
+        Product product = this.getOne(wrapper);
+        int max = product.getProductNum() - product.getProductSales();
+        if(max > 0){
+            stringRedisTemplate.opsForValue().set(key,String.valueOf(max));
+        }
+        return Math.max(max, 0);
     }
 }
 

@@ -1,5 +1,6 @@
 package com.mall.utils;
 
+import com.mall.exception.BusinessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -7,6 +8,9 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+
+import static com.mall.base.ErrorCode.SYSTEM_ERROR;
+import static com.mall.constant.MessageConstant.SERVER_INTERNAL_ERROR;
 
 @Component
 public class RedisIdWorker {
@@ -26,8 +30,8 @@ public class RedisIdWorker {
     /**
      * 自动生成序列号
      *
-     * @param keyPrefix
-     * @return
+     * @param keyPrefix 键值前缀
+     * @return 序列号
      */
     public long nextId(String keyPrefix) {
         //获取时间戳
@@ -39,8 +43,11 @@ public class RedisIdWorker {
         String date = now.format(DateTimeFormatter.ofPattern("yyyy:MM:dd"));
         //获取原来的序列号
         Long count = stringRedisTemplate.opsForValue().increment(keyPrefix + ":" + date);
-        //拼接 时间戳向左移32位或上count
-        return timeStamp << COUNT_BITS | count;
+        if(count != null){
+            //拼接 时间戳向左移32位或上count
+            return timeStamp << COUNT_BITS | count;
+        }
+        throw new BusinessException(SYSTEM_ERROR,SERVER_INTERNAL_ERROR);
     }
 
 }

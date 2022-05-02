@@ -40,7 +40,7 @@ public class ProductController {
      * 获取分类下的商品信息
      *
      * @param categoryName 分类名
-     * @return
+     * @return 商品信息
      */
     @GetMapping("/getPromoProduct")
     public BaseResponse<List<Product>> getPromoProduct(String categoryName) {
@@ -58,7 +58,7 @@ public class ProductController {
      * 获取热门商品
      *
      * @param categoryName 分类名
-     * @return
+     * @return 热门商品
      */
     @GetMapping("/getHotProduct")
     public BaseResponse<List<Product>> getHotProduct(String[] categoryName) {
@@ -71,7 +71,7 @@ public class ProductController {
 
     /**
      * 获取所有分类
-     * @return
+     * @return 分类
      */
     @GetMapping("/getCategory")
     public BaseResponse<List<Category>> getCategory(){
@@ -82,7 +82,7 @@ public class ProductController {
     /**
      * 分页获取所有商品
      * @param productPageRequest 分页获取商品信息请求
-     * @return
+     * @return 分页获取所有商品
      */
     @PostMapping("/getAllProduct")
     public BaseResponse<IPage<Product>> getAllProduct(@RequestBody ProductPageRequest productPageRequest){
@@ -101,7 +101,7 @@ public class ProductController {
     /**
      * 根据分类分页获取所有商品信息
      * @param productPageRequest 分页分类获取商品信息请求
-     * @return
+     * @return 所有商品信息
      */
     @PostMapping("/getProductByCategory")
     public BaseResponse<IPage<Product>> getProductByCategory(@RequestBody ProductPageRequest productPageRequest){
@@ -121,7 +121,7 @@ public class ProductController {
     /**
      * 根据搜索内容获取分类分页商品信息
      * @param productPageRequest 分页搜素查询获取商品信息请求
-     * @return
+     * @return 搜索内容获取分类分页商品信息
      */
     @PostMapping("/getProductBySearch")
     public BaseResponse<IPage<Product>> getProductBySearch(@RequestBody ProductPageRequest productPageRequest){
@@ -141,7 +141,7 @@ public class ProductController {
     /**
      * 获取商品的详细信息
      * @param productId 商品id
-     * @return
+     * @return 详细信息
      */
     @GetMapping("/getDetails")
     public BaseResponse<Product> getDetailsById(String productId){
@@ -158,7 +158,7 @@ public class ProductController {
     /**
      * 获取商品的所有图片
      * @param productId 商品id
-     * @return
+     * @return 所有图片
      */
     @GetMapping("/getDetailsPicture")
     public BaseResponse<List<ProductPicture>> getDetailsPicture(String productId){
@@ -175,7 +175,7 @@ public class ProductController {
     /**
      * 添加商品
      * @param product 商品
-     * @return
+     * @return 商品ID
      */
     @PostMapping("/addProduct")
     public BaseResponse<Integer> addProduct(@RequestBody Product product) {
@@ -191,7 +191,7 @@ public class ProductController {
     /**
      * 添加图片
      * @param productPictureRequest 请求体
-     * @return
+     * @return 是否成功
      */
     @PostMapping("/addPictures")
     public BaseResponse<Boolean> addProductPictures(@RequestBody ProductPictureRequest productPictureRequest) {
@@ -208,7 +208,7 @@ public class ProductController {
     /**
      * 删除商品的一些详细图片
      * @param productPictureRequest 商品图片请求体
-     * @return
+     * @return 是否成功
      */
     @DeleteMapping("/removePictures")
     public BaseResponse<Boolean> removeProductPictures(@RequestBody ProductPictureRequest productPictureRequest) {
@@ -225,7 +225,7 @@ public class ProductController {
     /**
      * 删除商品
      * @param productId 商品id
-     * @return
+     * @return 是否成功
      */
     @DeleteMapping("/{productId}")
     public BaseResponse<Boolean> deleteProduct(@PathVariable("productId") Integer productId) {
@@ -239,7 +239,7 @@ public class ProductController {
     /**
      * 更新商品
      * @param product 商品
-     * @return
+     * @return 是否成功
      */
     @PutMapping
     public BaseResponse<Boolean> updateProduct(@RequestBody Product product) {
