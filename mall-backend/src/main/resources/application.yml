@@ -32,6 +32,18 @@ spring:
         max-idle: 10
         min-idle: 1
         time-between-eviction-runs: 10s
+  rabbitmq:
+    host:
+    username: admin
+    password: admin
+    port: 5672
+    virtual-host: /
+    publisher-returns: true
+    # 下面这些无法通过注入写入程序 需要手动在Listener中配置
+    listener:
+      simple:
+        acknowledge-mode: manual  #Ack响应方式
+        prefetch: 1 #QOS设置限流
 
 mybatis-plus:
   configuration:

@@ -30,7 +30,7 @@ public interface UserService extends IService<User> {
      * @param password 密码
      * @return
      */
-    String userLogin(String username, String password, HttpServletRequest request);
+    String userLogin(String username, String password);
 
     /**
      * 查询用户是否存在

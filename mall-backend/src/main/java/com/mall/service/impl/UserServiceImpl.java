@@ -67,7 +67,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (username.length() < 4) {
             throw new BusinessException(PARAMS_PATTERN_ERROR, LENGTH_REGISTER_FAIL);
         }
-        String valuePattern = "^[a-z_\\d]{4,20}$";
+        String valuePattern = "^[a-zA-Z_\\d]{4,20}$";
         Matcher matcher = Pattern.compile(valuePattern).matcher(username);
         if (!matcher.find()) {
             throw new BusinessException(PARAMS_PATTERN_ERROR, PATTERN_REGISTER_FAIL);
@@ -96,7 +96,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public String userLogin(String username, String password, HttpServletRequest request) {
+    public String userLogin(String username, String password) {
         //1.校验非空
         if (StringUtils.isAnyBlank(username, password)) {
             throw new BusinessException(PARAMS_NULL_ERROR);
@@ -105,7 +105,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (username.length() < 4) {
             throw new BusinessException(PARAMS_PATTERN_ERROR, LENGTH_REGISTER_FAIL);
         }
-        String valuePattern = "^[a-z_\\d]{4,20}$";
+        String valuePattern = "^[a-zA-Z_\\d]{4,20}$";
         Matcher matcher = Pattern.compile(valuePattern).matcher(username);
         if (!matcher.find()) {
             throw new BusinessException(PARAMS_PATTERN_ERROR, PATTERN_REGISTER_FAIL);

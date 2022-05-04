@@ -70,7 +70,7 @@ public class UserController {
         }
         String username = userLoginRequest.getUsername();
         String password = userLoginRequest.getPassword();
-        String token = userService.userLogin(username, password, request);
+        String token = userService.userLogin(username, password);
         return ResultUtils.success(token,LOGIN_SUCCESS);
     }
 

@@ -6,8 +6,10 @@ import com.mall.constant.MessageConstant;
 import com.mall.exception.BusinessException;
 import com.mall.model.domain.Orders;
 import com.mall.model.domain.ShoppingCart;
+import com.mall.model.domain.UserDTO;
 import com.mall.model.request.OrderRequest;
 import com.mall.service.OrdersService;
+import com.mall.utils.UserHolder;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,35 +47,38 @@ public class OrderController {
 
     /**
      * 添加订单
+     *
      * @param orderRequest 订单请求体
      * @return
      */
     @PostMapping("/addOrder")
-    public BaseResponse<Boolean> addOrders(@RequestBody OrderRequest orderRequest){
+    public BaseResponse<Boolean> addOrders(@RequestBody OrderRequest orderRequest) {
         if (orderRequest == null) {
             throw new BusinessException(PARAMS_NULL_ERROR);
         }
-        String userId = orderRequest.getUserId();
+        UserDTO user = UserHolder.getUser();
+        Integer userId = user.getUserId();
         ShoppingCart[] shoppingCart = orderRequest.getShoppingCart();
-        if (StringUtils.isAnyBlank(userId) || shoppingCart == null || shoppingCart.length == 0) {
+        if (userId == null || shoppingCart == null || shoppingCart.length == 0) {
             throw new BusinessException(PARAMS_NULL_ERROR);
         }
-        Boolean result = ordersService.addOrders(userId, shoppingCart);
-        if(Boolean.TRUE.equals(result)){
-            return ResultUtils.success(true,ORDER_SUCCESS);
+        Boolean result = ordersService.addOrders(String.valueOf(userId), shoppingCart);
+        if (Boolean.TRUE.equals(result)) {
+            return ResultUtils.success(true, ORDER_SUCCESS);
         } else {
-            throw new BusinessException(REQUEST_SERVICE_ERROR,ORDER_FAIL);
+            throw new BusinessException(REQUEST_SERVICE_ERROR, ORDER_FAIL);
         }
     }
 
     /**
      * 获取所有订单
+     *
      * @return
      */
     @GetMapping()
-    public BaseResponse<List<List<Orders>>> getAllOrders(){
+    public BaseResponse<List<List<Orders>>> getAllOrders() {
         List<List<Orders>> result = ordersService.getAllOrders();
-        return ResultUtils.success(result,SELECT_SUCCESS);
+        return ResultUtils.success(result, SELECT_SUCCESS);
     }
 
 }

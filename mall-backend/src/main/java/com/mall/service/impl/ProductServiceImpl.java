@@ -1,5 +1,6 @@
 package com.mall.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -104,16 +105,19 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
             throw new BusinessException(REQUEST_SERVICE_ERROR, INVENTORY_SHORTAGE_ERROR);
         }
         //库存充足
-        Product product = this.getById(productId);
-        product.setProductSales(product.getProductSales() + num);
-        boolean success = updateById(product);
-        if (success) {
+//        Product product = this.getById(productId);
+//        product.setProductSales(product.getProductSales() + num);
+//        Product newProduct = new Product();
+//        BeanUtil.copyProperties(product,newProduct,false);
+//        boolean success = updateById(newProduct);
+//        if (success) {
             //修改缓存库存
             String key = INVENTORY_KEY + ":" + productId;
             stringRedisTemplate.opsForValue().set(key, String.valueOf(max - num));
             return Boolean.TRUE;
-        }
-        throw new BusinessException(REQUEST_SERVICE_ERROR, ORDER_FAIL);
+//        }else{
+//            throw new BusinessException(REQUEST_SERVICE_ERROR, ORDER_FAIL);
+//        }
     }
 
     @Override
@@ -265,7 +269,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         String key = INVENTORY_KEY + ":" + productId;
         int max = Integer.parseInt(Objects.requireNonNull(stringRedisTemplate.opsForValue().get(key)));
         int newNum = product.getProductNum() - queryResult.getProductNum();
-        if((max + newNum) < 0){
+        if ((max + newNum) < 0) {
             //主动削减库存至不足
             stringRedisTemplate.opsForValue().set(key, "0");
         }
@@ -303,15 +307,15 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product>
         //查缓存
         String key = INVENTORY_KEY + ":" + productId;
         String maxPurchasableNum = stringRedisTemplate.opsForValue().get(key);
-        if(maxPurchasableNum!=null){
+        if (maxPurchasableNum != null) {
             return Integer.valueOf(maxPurchasableNum);
         }
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Product::getProductId,productId).eq(Product::getIsAllowance,0);
+        wrapper.eq(Product::getProductId, productId).eq(Product::getIsAllowance, 0);
         Product product = this.getOne(wrapper);
         int max = product.getProductNum() - product.getProductSales();
-        if(max > 0){
-            stringRedisTemplate.opsForValue().set(key,String.valueOf(max));
+        if (max > 0) {
+            stringRedisTemplate.opsForValue().set(key, String.valueOf(max));
         }
         return Math.max(max, 0);
     }

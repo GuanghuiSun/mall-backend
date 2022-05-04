@@ -16,7 +16,13 @@ class ShoppingCartServiceTest {
     @Resource
     private ShoppingCartService shoppingCartService;
 
-
+    @Test
+    void addTest(){
+        String productId = "1";
+        for (int i = 9; i < 109; i++) {
+            shoppingCartService.addShoppingCart(String.valueOf(i),productId);
+        }
+    }
 
     @Test
     void selectTest(){

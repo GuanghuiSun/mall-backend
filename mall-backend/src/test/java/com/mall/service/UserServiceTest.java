@@ -1,5 +1,6 @@
 package com.mall.service;
 
+import cn.hutool.core.io.file.FileWrapper;
 import com.mall.model.domain.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.annotation.Resource;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,16 +31,21 @@ class UserServiceTest {
     private UserService userService;
 
     @Test
-    void testAddUser(){
-        User user = new User();
-        user.setUsername("test12");
-        user.setAvatarUrl("https://account.bilibili.com/account/face/upload?spm_id_from=333.999.0.0");
-        user.setUserPassword("aa123456");
-        user.setPhone("199107622342");
-        user.setEmail("1849920@qq.com");
-        boolean save = userService.save(user);
-        System.out.println(user.getUserId());
-        assertTrue(save);
+    void testAddUser() throws IOException {
+        Map<Integer,String> map = new HashMap<>();
+        FileWriter fileWriter = new FileWriter(new File("C:\\Users\\huawei\\Desktop\\token.txt"));
+        for (int i = 0; i < 100; i++) {
+            String name = "batchUser"+i;
+            String password = "user123456";
+            String token = userService.userLogin(name, password);
+//            map.put(9+i,token);
+            fileWriter.write(token);
+            fileWriter.write("\n");
+        }
+//        fileWriter.write(String.valueOf(9) + " " + "asdada");
+//        fileWriter.write("\n");
+//        fileWriter.write(String.valueOf(9) + " " + "asdada");
+        fileWriter.close();
     }
 
 
