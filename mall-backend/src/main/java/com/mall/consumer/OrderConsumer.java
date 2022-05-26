@@ -2,6 +2,7 @@ package com.mall.consumer;
 
 import cn.hutool.json.JSONUtil;
 import com.mall.config.RabbitMQConfig;
+import com.mall.exception.OrderException;
 import com.mall.model.domain.OrderMessageDTO;
 import com.mall.service.OrdersService;
 import com.rabbitmq.client.Channel;

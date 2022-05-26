@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mall.config.RabbitMQConfig;
 import com.mall.exception.BusinessException;
+import com.mall.exception.OrderException;
 import com.mall.model.domain.OrderMessageDTO;
 import com.mall.model.domain.Orders;
 import com.mall.model.domain.Product;
@@ -105,9 +106,9 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
             String key = INVENTORY_KEY + ":" + productId;
             Long changed = stringRedisTemplate.execute(CHANGE_INVENTORY,
                     Collections.singletonList(key), String.valueOf(num));
-            if(changed == 0){
+            if (changed == 0) {
                 //库存不足
-                throw new BusinessException(REQUEST_SERVICE_ERROR,INVENTORY_SHORTAGE_ERROR);
+                throw new BusinessException(REQUEST_SERVICE_ERROR, INVENTORY_SHORTAGE_ERROR);
             }
 //            封装订单消息
             OrderMessageDTO orderMessageDTO = new OrderMessageDTO();
@@ -116,21 +117,30 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
             orderMessageDTO.setProductId(productId);
             orderMessageDTO.setProductPrice(shoppingCart.getProduct().getProductSellingPrice());
             orderMessageDTO.setNum(num);
-            String json = JSONUtil.toJsonStr(orderMessageDTO);
-            MessageProperties messageProperties = new MessageProperties();
-            messageProperties.setContentType(MessageProperties.CONTENT_TYPE_JSON);
-            Message message = new Message(json.getBytes(StandardCharsets.UTF_8), messageProperties);
-            CorrelationData correlationData = new CorrelationData();
-            correlationData.setId(String.valueOf(orderMessageDTO.getOrderId()));//设置为订单ID，全局唯一
-            ReturnedMessage returnedMessage = new ReturnedMessage(message, 200, "用户创建订单消息",
-                    RabbitMQConfig.ORDER_EXCHANGE, RabbitMQConfig.ORDER_ROUTING_KEY);
-            correlationData.setReturned(returnedMessage);//设置不可路由捕获消息
-            //发送消息
-            rabbitTemplate.convertAndSend(RabbitMQConfig.ORDER_EXCHANGE,
-                    RabbitMQConfig.ORDER_ROUTING_KEY,
-                    message,correlationData);
+            orderMessageDTO.setIdConsumed(Boolean.FALSE);
+            sendMessage(orderMessageDTO);
         }
         return true;
+    }
+
+    /**
+     * 向消息队列中发送消息
+     * @param orderMessageDTO 消息体
+     */
+    public void sendMessage(OrderMessageDTO orderMessageDTO) {
+        String json = JSONUtil.toJsonStr(orderMessageDTO);
+        MessageProperties messageProperties = new MessageProperties();
+        messageProperties.setContentType(MessageProperties.CONTENT_TYPE_JSON);
+        Message message = new Message(json.getBytes(StandardCharsets.UTF_8), messageProperties);
+        CorrelationData correlationData = new CorrelationData();
+        correlationData.setId(String.valueOf(orderMessageDTO.getOrderId()));//设置为订单ID，全局唯一
+        ReturnedMessage returnedMessage = new ReturnedMessage(message, 200, "用户创建订单消息",
+                RabbitMQConfig.ORDER_EXCHANGE, RabbitMQConfig.ORDER_ROUTING_KEY);
+        correlationData.setReturned(returnedMessage);//设置不可路由捕获消息
+        //发送消息
+        rabbitTemplate.convertAndSend(RabbitMQConfig.ORDER_EXCHANGE,
+                RabbitMQConfig.ORDER_ROUTING_KEY,
+                message, correlationData);
     }
 
     @Override
@@ -148,22 +158,22 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         order.setProductNum(num);
         order.setProductPrice(orderMessageDTO.getProductPrice());
         boolean save = this.save(order);
-        if(!save){
-            throw new BusinessException(REQUEST_SERVICE_ERROR,CREATE_ORDER_ERROR);
+        if (!save) {
+            throw new OrderException(REQUEST_SERVICE_ERROR, CREATE_ORDER_ERROR, orderMessageDTO);
         }
         //修改商品销售额
         LambdaUpdateWrapper<Product> wrapper = new LambdaUpdateWrapper<>();
         Product product = productService.getById(productId);
-        wrapper.eq(Product::getProductId,productId).le(Product::getProductSales,product.getProductNum()).set(Product::getProductSales,product.getProductSales()+num);
+        wrapper.eq(Product::getProductId, productId).le(Product::getProductSales, product.getProductNum()).set(Product::getProductSales, product.getProductSales() + num);
         boolean update = productService.update(wrapper);
-        if(!update){
-            throw new BusinessException(REQUEST_SERVICE_ERROR,ORDER_FAIL);
+        if (!update) {
+            throw new OrderException(REQUEST_SERVICE_ERROR, CREATE_ORDER_ERROR, orderMessageDTO);
         }
         //删除购物车
-//        Boolean success = shoppingCartService.deleteShoppingCart(String.valueOf(userId), String.valueOf(productId));
-//        if(Boolean.FALSE.equals(success)){
-//            throw new BusinessException(REQUEST_SERVICE_ERROR,ORDER_FAIL);
-//        }
+        Boolean success = shoppingCartService.deleteShoppingCart(String.valueOf(userId), String.valueOf(productId));
+        if (Boolean.FALSE.equals(success)) {
+            throw new OrderException(REQUEST_SERVICE_ERROR, ORDER_FAIL, orderMessageDTO);
+        }
         return Boolean.TRUE;
     }
 

@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: bookstore
+    name: mall
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver

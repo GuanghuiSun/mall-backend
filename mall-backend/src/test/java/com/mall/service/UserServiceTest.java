@@ -31,13 +31,18 @@ class UserServiceTest {
     private UserService userService;
 
     @Test
+    void testLogin() {
+        System.out.println(userService.userLogin("thistest", "sun123456"));
+    }
+
+    @Test
     void testAddUser() throws IOException {
-        Map<Integer,String> map = new HashMap<>();
+//        Map<Integer,String> map = new HashMap<>();
         FileWriter fileWriter = new FileWriter(new File("C:\\Users\\huawei\\Desktop\\token.txt"));
-        for (int i = 0; i < 100; i++) {
-            String name = "batchUser"+i;
-            String password = "user123456";
-            String token = userService.userLogin(name, password);
+        for (int i = 0; i < 1000; i++) {
+//            String name = "batchUser"+i;
+//            String password = "user123456";
+            String token = userService.userLogin("batchUsers"+i,"user123456");
 //            map.put(9+i,token);
             fileWriter.write(token);
             fileWriter.write("\n");
@@ -46,6 +51,9 @@ class UserServiceTest {
 //        fileWriter.write("\n");
 //        fileWriter.write(String.valueOf(9) + " " + "asdada");
         fileWriter.close();
+//        for (int i = 0; i < 1000; i++) {
+//            userService.userRegister("batchUsers"+i,"user123456","user123456");
+//        }
     }
 
 

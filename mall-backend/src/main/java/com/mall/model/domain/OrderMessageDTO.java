@@ -15,4 +15,5 @@ public class OrderMessageDTO {
     private Integer productId;
     private Double productPrice;
     private Integer num;
+    private Boolean idConsumed;
 }

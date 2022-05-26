@@ -46,5 +46,11 @@ public interface OrdersService extends IService<Orders> {
      */
     List<List<Orders>> getAllOrders();
 
+    /**
+     * 向消息队列中发送消息
+     * @param orderMessageDTO 消息体
+     */
+    void sendMessage(OrderMessageDTO orderMessageDTO);
+
 
 }
