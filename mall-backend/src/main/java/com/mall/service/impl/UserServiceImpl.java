@@ -2,12 +2,9 @@ package com.mall.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
-import cn.hutool.core.util.BooleanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.mall.base.BaseResponse;
-import com.mall.base.ResultUtils;
 import com.mall.exception.BusinessException;
 import com.mall.model.domain.ShoppingCart;
 import com.mall.model.domain.User;
@@ -16,7 +13,6 @@ import com.mall.service.ShoppingCartService;
 import com.mall.service.UserService;
 import com.mall.mapper.UserMapper;
 import com.mall.utils.UserHolder;
-import io.netty.util.ResourceLeakDetector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -24,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -34,8 +29,7 @@ import java.util.stream.Collectors;
 
 import static com.mall.base.ErrorCode.*;
 import static com.mall.constant.MessageConstant.*;
-import static com.mall.constant.RedisConstant.LOGIN_USER_TTL;
-import static com.mall.constant.RedisConstant.USER_LOGIN_STATE;
+import static com.mall.constant.RedisConstant.*;
 
 /**
  * @author sgh
@@ -132,15 +126,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         //对用户脱敏
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
-        //记录用户登录态
-        String token = UUID.randomUUID().toString();
         Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
                 CopyOptions.create().setIgnoreNullValue(true)
                         .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
-        String tokenKey = USER_LOGIN_STATE + ":" + token;
+        //验证用户是否登陆过
+        String checkLoginStateKey = USER_LOGIN_STATE + ":" + user.getUserId();
+        String loginToken = stringRedisTemplate.opsForValue().get(checkLoginStateKey);
+        if (loginToken != null) {
+            //已经登陆过了 删除原有的token
+            String tokenKey = USER_LOGIN_MESSAGE + ":" + loginToken;
+            stringRedisTemplate.opsForHash().delete(tokenKey, userMap.keySet().toArray());
+        }
+        //记录用户登录态
+        String token = UUID.randomUUID().toString();
+        String tokenKey = USER_LOGIN_MESSAGE + ":" + token;
         stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
+        stringRedisTemplate.opsForValue().set(checkLoginStateKey, token);
         //设置有效期
         stringRedisTemplate.expire(tokenKey, LOGIN_USER_TTL, TimeUnit.MINUTES);
+        stringRedisTemplate.expire(checkLoginStateKey, LOGIN_USER_TTL, TimeUnit.MINUTES);
         //保存用户到UserHolder
         UserHolder.saveUser(userDTO);
         return token;

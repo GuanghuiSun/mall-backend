@@ -170,10 +170,10 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
             throw new OrderException(REQUEST_SERVICE_ERROR, CREATE_ORDER_ERROR, orderMessageDTO);
         }
         //删除购物车
-        Boolean success = shoppingCartService.deleteShoppingCart(String.valueOf(userId), String.valueOf(productId));
-        if (Boolean.FALSE.equals(success)) {
-            throw new OrderException(REQUEST_SERVICE_ERROR, ORDER_FAIL, orderMessageDTO);
-        }
+//        Boolean success = shoppingCartService.deleteShoppingCart(String.valueOf(userId), String.valueOf(productId));
+//        if (Boolean.FALSE.equals(success)) {
+//            throw new OrderException(REQUEST_SERVICE_ERROR, ORDER_FAIL, orderMessageDTO);
+//        }
         return Boolean.TRUE;
     }
 

@@ -12,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -64,14 +63,14 @@ public class UserController {
      * @return
      */
     @PostMapping("/login")
-    public BaseResponse<String> login(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<String> login(@RequestBody UserLoginRequest userLoginRequest) {
         if (userLoginRequest == null) {
             throw new BusinessException(PARAMS_NULL_ERROR);
         }
         String username = userLoginRequest.getUsername();
         String password = userLoginRequest.getPassword();
         String token = userService.userLogin(username, password);
-        return ResultUtils.success(token,LOGIN_SUCCESS);
+        return ResultUtils.success(token, LOGIN_SUCCESS);
     }
 
     /**
@@ -82,7 +81,7 @@ public class UserController {
     @GetMapping("/me")
     public BaseResponse<UserDTO> queryMe() {
         UserDTO user = UserHolder.getUser();
-        System.out.println("UserDTO:"+user);
+        System.out.println("UserDTO:" + user);
         return ResultUtils.success(user, LOGIN_SUCCESS);
     }
 
@@ -94,11 +93,12 @@ public class UserController {
     @GetMapping("/all")
     public BaseResponse<List<UserDTO>> getAllUsers() {
         List<UserDTO> users = userService.getAllUsers();
-        return ResultUtils.success(users,SELECT_SUCCESS);
+        return ResultUtils.success(users, SELECT_SUCCESS);
     }
 
     /**
      * 禁用账户
+     *
      * @param userId 用户id
      * @return
      */
@@ -108,10 +108,10 @@ public class UserController {
             throw new BusinessException(PARAMS_NULL_ERROR);
         }
         Boolean success = userService.disableUser(userId);
-        if(Boolean.FALSE.equals(success)){
-            throw new BusinessException(REQUEST_SERVICE_ERROR,CHANGE_VALID_FAIL);
+        if (Boolean.FALSE.equals(success)) {
+            throw new BusinessException(REQUEST_SERVICE_ERROR, CHANGE_VALID_FAIL);
         }
-        return ResultUtils.success(true,CHANGE_VALID_SUCCESS);
+        return ResultUtils.success(true, CHANGE_VALID_SUCCESS);
     }
 
     @DeleteMapping("{userId}")
@@ -120,10 +120,10 @@ public class UserController {
             throw new BusinessException(PARAMS_NULL_ERROR);
         }
         Boolean success = userService.deleteUser(userId);
-        if(Boolean.FALSE.equals(success)){
-            throw new BusinessException(REQUEST_SERVICE_ERROR,DELETE_FAIL);
+        if (Boolean.FALSE.equals(success)) {
+            throw new BusinessException(REQUEST_SERVICE_ERROR, DELETE_FAIL);
         }
-        return ResultUtils.success(true,DELETE_SUCCESS);
+        return ResultUtils.success(true, DELETE_SUCCESS);
     }
 
 }

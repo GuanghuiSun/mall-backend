@@ -49,7 +49,8 @@ public class WebConfig implements WebMvcConfigurer {
                     "/public/**",
                     "/resources/carousel",
                     "/product/getPromoProduct",
-                    "/product/getAllProduct"
+                    "/product/getAllProduct",
+                    "/error"
         ).order(2);
     }
 }
